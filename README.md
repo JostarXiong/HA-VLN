@@ -84,6 +84,41 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 git clone https://github.com/F1y1113/HA-VLN.git
 cd HA-VLN
 ```
+
+### Docker Environment (Recommended)
+
+Use our pre-built Docker environment with Python 3.8, PyTorch, CUDA 11.8,
+and Habitat-Sim/Habitat-Lab 0.1.7. Install Docker and the NVIDIA Container
+Toolkit on your host, then pull the image:
+
+```bash
+IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:e1a0544f66beaf5218cc9df63da51b4a1a22a6bf0471ca0c2f75e81ee02a6556
+docker pull "$IMAGE"
+```
+
+Prepare the datasets following [Download Dataset](#-download-dataset).
+From the HA-VLN repository root, set `DATA_DIR` to the absolute path of your
+existing dataset directory and start an interactive container:
+
+```bash
+DATA_DIR="/absolute/path/to/Data"
+
+docker run --gpus all -it --rm \
+  --shm-size 16g \
+  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
+  --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
+  --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
+  --workdir /workspace/HA-VLN \
+  "$IMAGE" bash
+```
+
+The shell opens in your mounted repository. The same dataset directory is
+available through the repository's `Data/` and `/data/havln2` paths.
+Code and data changes persist on the host; packages installed only inside
+this temporary container are removed when it exits.
+
+### Native Installation
+
 Set up a Conda environment for the simulator.
 Please install habitat-lab (v0.1.7) and habitat-sim (v0.1.7) follow [ETPNav](https://github.com/MarSaKi/ETPNav/) (please note that we use python==3.7).
 ```bash
