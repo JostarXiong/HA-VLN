@@ -84,6 +84,143 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 git clone https://github.com/F1y1113/HA-VLN.git
 cd HA-VLN
 ```
+
+### Docker Environment (Recommended)
+
+Use our pre-built Docker environment with Python 3.8, PyTorch, CUDA 11.8,
+and Habitat-Sim/Habitat-Lab 0.1.7. Install Docker and the NVIDIA Container
+Toolkit on your host, then pull the image:
+
+```bash
+IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:e1a0544f66beaf5218cc9df63da51b4a1a22a6bf0471ca0c2f75e81ee02a6556
+docker pull "$IMAGE"
+```
+
+Prepare the datasets following [Download Dataset](#-download-dataset).
+From the HA-VLN repository root, set `DATA_DIR` to the absolute path of your
+existing dataset directory and start an interactive container:
+
+```bash
+DATA_DIR="/absolute/path/to/Data"
+
+docker run --gpus all -it --rm \
+  --shm-size 16g \
+  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
+  --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
+  --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
+  --workdir /workspace/HA-VLN \
+  "$IMAGE" bash
+```
+
+The shell opens in your mounted repository. The same dataset directory is
+available through the repository's `Data/` and `/data/havln2` paths.
+Code and data changes persist on the host; packages installed only inside
+this temporary container are removed when it exits.
+
+### Native Installation
+
+#### Python 3.8 (Recommended)
+
+The following Linux setup uses Python 3.8 and the CUDA 11.8 PyTorch stack.
+Keep Habitat-Sim and Habitat-Lab at **0.1.7**. A compatible NVIDIA driver is
+required; the pre-built simulator does not require a local CUDA compiler.
+The pre-built route and a short CMA rollout have been tested on NVIDIA A100.
+
+##### 1. Habitat Simulator Setup
+
+Run these commands from the HA-VLN repository root:
+
+```bash
+HA_VLN_ROOT="$(pwd)"
+conda create -n havlnce python=3.8 pip=24.0 -c conda-forge -y
+conda activate havlnce
+conda install -c aihabitat -c conda-forge \
+  "habitat-sim=0.1.7=*headless*" "numpy=1.23.5" \
+  python-lmdb libxcrypt libopengl libglx -y
+
+python -m pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 \
+  --index-url https://download.pytorch.org/whl/cu118
+
+git clone --branch v0.1.7 --depth 1 \
+  https://github.com/facebookresearch/habitat-lab.git habitat-lab
+python -m pip install -c requirements-py38.txt \
+  -r habitat-lab/requirements.txt setuptools pytest-runner \
+  tensorboard moviepy webdataset ifcfg msgpack_numpy
+python -m pip install --no-deps --no-build-isolation -e habitat-lab
+
+# Prefer this environment's C++ runtime and headless OpenGL libraries.
+export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
+export DISPLAY=""
+export EGL_DEVICE_ID=0
+```
+
+For Python 3.8, use `requirements-py38.txt` as the compatibility constraints
+instead of installing the legacy Habitat-Baselines RL or agent requirements.
+The pinned Gym version avoids the old VLN sensor's `Discrete(0)` incompatibility.
+Prepare scene and human assets using [Download Dataset](#-download-dataset).
+
+<details>
+<summary>Alternative: build Habitat-Sim 0.1.7 from source</summary>
+
+Use this **instead of** the pre-built Habitat-Sim installation above if you
+need to modify the simulator's C++ code. Install the system build libraries,
+then use the same Python 3.8 environment and compatibility constraints:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends \
+  cmake build-essential libjpeg-dev libglm-dev libgl1 \
+  libegl1-mesa-dev mesa-utils xorg-dev freeglut3-dev
+git clone --branch v0.1.7 --recursive \
+  https://github.com/facebookresearch/habitat-sim.git habitat-sim
+cd habitat-sim
+python -m pip install -r requirements.txt -c "$HA_VLN_ROOT/requirements-py38.txt"
+python setup.py install --headless
+cd "$HA_VLN_ROOT"
+```
+
+</details>
+
+##### 2. CMA Agent Setup
+
+To run the supplied CMA trainer, install the agent dependencies and its
+GroundingDINO detector. The CUDA compiler must match the PyTorch CUDA version:
+
+```bash
+cd "$HA_VLN_ROOT"
+conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
+  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
+export CUDA_HOME="$CONDA_PREFIX"
+export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
+export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
+
+python -m pip install -r requirements-py38.txt
+git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
+git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
+MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
+  -e HASimulator/GroundingDINO
+
+mkdir -p HASimulator/GroundingDINO/weights
+curl -fL --retry 3 \
+  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
+  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
+python -m pip check
+```
+
+If GroundingDINO is already checked out, skip its clone command. TensorFlow
+is included because the current CMA trainer imports it; TensorBoard alone
+is not a replacement. Follow [Training](#-training) for model execution and
+prepare the encoder weights described in [Download Dataset](#-download-dataset).
+
+#### Legacy Python 3.7
+
+<details>
+<summary>Original installation instructions (historical reference)</summary>
+
+These commands retain the original software stack; they are not the recommended
+Python 3.8 installation route. Choose either the Conda or source Habitat-Sim
+installation, not both, and use a separate environment from the setup above.
+
 Set up a Conda environment for the simulator.
 Please install habitat-lab (v0.1.7) and habitat-sim (v0.1.7) follow [ETPNav](https://github.com/MarSaKi/ETPNav/) (please note that we use python==3.7).
 ```bash
@@ -134,6 +271,8 @@ Finally, you should install necessary packages for agent.
 pip install torch==1.9.1+cu111 torchvision==0.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 pip install -r requirements.txt
 ```
+
+</details>
 
 ---
 
