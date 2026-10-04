@@ -72,8 +72,8 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
   - [🚀 Quick Start](#-quick-start)
     - [1. Clone Repository](#1-clone-repository)
     - [2. Download Datasets](#2-download-datasets)
-    - [3. Reproduce Baseline with Docker (Recommended)](#3-reproduce-baseline-with-docker-recommended)
-    - [4. Alternative: Native Installation](#4-alternative-native-installation)
+    - [3. Reproduce Baseline with Docker](#3-reproduce-baseline-with-docker)
+  - [🛠️ Detailed Installation & Alternative Downloads](#️-detailed-installation--alternative-downloads)
   - [🔄 Dataset Organization](#-dataset-organization)
   - [🖥️ Real-time Human Rendering](#-real-time-human-rendering)
   - [🌆 Human-Scene Fusion](#-human-scene-fusion)
@@ -95,72 +95,29 @@ cd HA-VLN
 
 ### 2. Download Datasets
 
-All datasets, human motion assets, and baseline checkpoints are structured inside the repository's `Data/` directory.
-
-#### Matterport3D Scene Meshes (License Required)
-
-Matterport3D scene meshes are required by Habitat-Sim to initialize scene environments. Request access at the [Matterport3D Project](https://niessner.github.io/Matterport/) and download scene assets into `Data/scene_datasets`:
+All scene meshes, human activities, and baseline checkpoints reside in `Data/`:
 
 ```bash
+# 1. Download Matterport3D scene meshes into Data/scene_datasets (license required: https://niessner.github.io/Matterport/)
 python2 download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
-```
 
-#### HA-VLN Benchmarks & Pretrained Weights
-
-##### Option 1: Hugging Face (1-Click, Recommended)
-
-All HA-R2R episodes, HAPS 2.0 3D human motions, annotations, depth encoder weights, and the pretrained CMA baseline checkpoint are distributed on Hugging Face:
-* **Dataset Repository**: [fly1113/HA-VLN on Hugging Face](https://huggingface.co/datasets/fly1113/HA-VLN)
-* Download all benchmark assets directly into `Data/`:
-```bash
+# 2. 1-Click download HA-R2R, HAPS 2.0, annotations, and pretrained models from Hugging Face
 pip install huggingface-hub
 huggingface-cli download fly1113/HA-VLN --local-dir Data --repo-type dataset
-```
 
-##### Option 2: Google Drive
-
-<details>
-<summary><b>Option 2: Google Drive (Alternative)</b></summary>
-<br>
-
-To download and extract HA-R2R and HAPS 2.0 datasets, simply run (`gdown` required):
-
-```bash
-bash scripts/download_data.sh
-```
-
-*(Optional) Pretrained Depth Encoder Weights*: Baseline models encode depth observations using a ResNet pre-trained on PointGoal navigation. If not using Hugging Face (which already includes them), download from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extract to `Data/ddppo-models/{model}.pth`.
-
-</details>
-
-#### Prepare Baseline Checkpoint for Evaluation
-
-Set up the released CMA checkpoint under the agent evaluation directory:
-
-```bash
+# 3. Set up the released CMA baseline checkpoint
 mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
 cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
 ```
-*(Or download the standalone checkpoint directly)*:
-```bash
-curl -fL --retry 3 https://huggingface.co/datasets/fly1113/HA-VLN/resolve/main/checkpoints/HA-VLN-CMA/ckpt.39.pth \
-  -o agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
-```
 
-### 3. Reproduce Baseline with Docker (Recommended)
+### 3. Reproduce Baseline with Docker
 
-Once the datasets in `Data/` are ready, pull our pre-built Docker image with Python 3.8, PyTorch, CUDA 11.8, and Habitat-Sim/Habitat-Lab 0.1.7:
+Pull our pre-built Docker image and run evaluation on `val_unseen` in one command:
 
 ```bash
 IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:78a62cd176d2fd7d0e2825f4cb5be2488ebc5f1a354649b7b4f536a98f1054f4
 docker pull "$IMAGE"
-```
 
-#### ⚡ 1-Minute Evaluation (1 Command)
-
-Run official evaluation on `val_unseen` directly mounting your local repository and `Data/` directory:
-
-```bash
 docker run --gpus all -it --rm \
   --shm-size 16g \
   --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
@@ -170,21 +127,7 @@ docker run --gpus all -it --rm \
   "$IMAGE" python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval
 ```
 
-*(Tip: If your datasets reside in an external directory, simply replace `source="$(pwd)/Data"` with your custom path `source="/path/to/your/Data"`)*.
-
-#### Interactive Development Shell
-
-To inspect the environment or run interactive commands:
-
-```bash
-docker run --gpus all -it --rm \
-  --shm-size 16g \
-  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
-  --mount type=bind,source="$(pwd)/Data",target=/workspace/HA-VLN/Data \
-  --mount type=bind,source="$(pwd)/Data",target=/data/havln2 \
-  --workdir /workspace/HA-VLN \
-  "$IMAGE" bash
-```
+*(Tip: To launch an interactive development shell, simply change `python run.py ...` to `bash`)*.
 
 #### Expected Benchmark Validation Results
 
@@ -193,10 +136,37 @@ docker run --gpus all -it --rm \
 | `val_seen` | 15.47 | 0.165 | 6.230 | 0.638 | 13.271 |
 | `val_unseen` | 11.94 | 0.114 | 6.502 | 0.689 | 22.352 |
 
-### 4. Alternative: Native Installation
+---
+
+## 🛠️ Detailed Installation & Alternative Downloads
+
+### Alternative Dataset Downloads (Google Drive)
 
 <details>
-<summary><b>Native Installation (Python 3.8 / CUDA 11.8)</b></summary>
+<summary><b>Google Drive and Standalone Download Links</b></summary>
+<br>
+
+If you prefer downloading from Google Drive instead of Hugging Face:
+
+- **Automated Download Script** (`gdown` required):
+  ```bash
+  bash scripts/download_data.sh
+  ```
+- **Google Drive Folder**: [HA-VLN Google Drive](https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing)
+- **Pretrained Depth Encoder Weights**:
+  Baseline models encode depth observations using a ResNet pre-trained on PointGoal navigation. Download from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extract to `Data/ddppo-models/{model}.pth`.
+- **Standalone CMA Checkpoint**:
+  ```bash
+  curl -fL --retry 3 https://huggingface.co/datasets/fly1113/HA-VLN/resolve/main/checkpoints/HA-VLN-CMA/ckpt.39.pth \
+    -o agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
+  ```
+
+</details>
+
+### Native Linux Installation (Python 3.8 / CUDA 11.8)
+
+<details>
+<summary><b>Native Linux Installation (Python 3.8 / CUDA 11.8)</b></summary>
 <br>
 
 The following Linux setup uses Python 3.8 and the CUDA 11.8 PyTorch stack.
