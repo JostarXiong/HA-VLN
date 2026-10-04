@@ -32,7 +32,7 @@
   <a href="https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing" target="_blank">
     <img src="https://img.shields.io/badge/Googledrive-dataset-purple">
   </a>
-  <a href="https://github.com/F1y1113/HA-VLN/blob/main/LICENSE" target="_blank">
+  <a href="https://github.com/UWMILab/HA-VLN/blob/main/LICENSE" target="_blank">
     <img src="https://img.shields.io/badge/License-MIT-green">
   </a>
 </p>
@@ -89,7 +89,7 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/F1y1113/HA-VLN.git
+git clone https://github.com/UWMILab/HA-VLN.git
 cd HA-VLN
 ```
 
