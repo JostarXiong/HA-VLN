@@ -71,7 +71,6 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 - [🎮 HA-VLN Simulator (HASimulator)](#-ha-vln-simulator-hasimulator)
 - [📊 HAPS 2.0 & HA-R2R Datasets (Data)](#-haps-20--ha-r2r-datasets-data)
 - [🤖 HA-VLN-CMA Baseline Agent (agent)](#-ha-vln-cma-baseline-agent-agent)
-- [🤗 Hugging Face Hub (fly1113/HA-VLN)](#-hugging-face-hub-fly1113ha-vln)
 - [Contributing](#contributing) · [Citation](#citation) · [License](#license)
 
 ---
@@ -655,20 +654,6 @@ To run inference on the test split and export trajectories for submission:
 cd agent
 python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type inference
 ```
-
----
-
-## 🤗 Hugging Face Hub (fly1113/HA-VLN)
-
-All core dataset components, dynamic 3D human models, and pre-trained baseline checkpoints are officially centralized on Hugging Face at [**fly1113/HA-VLN**](https://huggingface.co/datasets/fly1113/HA-VLN):
-
-| Component | Description | Structure / Files |
-|:---|:---|:---|
-| **`HA-R2R/`** | Human-aware navigation instructions & continuous episodes | `train/`, `val_seen/`, `val_unseen/` (`.json.gz`) |
-| **`HAPS2_0/`** | 486 dynamic 3D human motion SMPL models across 26 regions | `HAPS2_0.zip` (120-frame GLB motion sequences) |
-| **`checkpoints/`** | Official pre-trained baseline model weights (HA-VLN-CMA) | `HA-VLN-CMA/ckpt.39.pth` |
-
-You can explore the files, dataset cards, and online documentation directly at [huggingface.co/datasets/fly1113/HA-VLN](https://huggingface.co/datasets/fly1113/HA-VLN).
 
 ---
 
