@@ -95,8 +95,15 @@ class Detector(nn.Module):
         import os
         current_path = os.path.abspath(__file__)
         current_dir = os.path.dirname(current_path)
-        self.model = load_model(os.path.join(current_dir, "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"),
-                                 os.path.join(current_dir,"GroundingDINO/weights/groundingdino_swint_ogc.pth"))
+        config_path = os.path.join(current_dir, "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py")
+        checkpoint_path = os.path.join(current_dir, "GroundingDINO/weights/groundingdino_swint_ogc.pth")
+        if not os.path.isfile(config_path) or not os.path.isfile(checkpoint_path):
+            raise FileNotFoundError(
+                f"GroundingDINO model files not found at {config_path} or {checkpoint_path}.\n"
+                f"GroundingDINO is only required when SIMULATOR.HUMAN_COUNTING is enabled. "
+                f"Please ensure HASimulator/GroundingDINO is cloned and weights are downloaded."
+            )
+        self.model = load_model(config_path, checkpoint_path)
         self.box_threshold = 0.35
         self.text_threshold = 0.25
     
