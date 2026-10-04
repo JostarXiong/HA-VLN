@@ -86,6 +86,7 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
     - [3. Training from Scratch](#3-training-from-scratch)
     - [4. Evaluation & Validation](#4-evaluation--validation)
     - [5. Test Inference & Submission](#5-test-inference--submission)
+  - [🤗 Hugging Face Hub](#-hugging-face-hub-fly1113ha-vln)
   - [Contributing](#contributing)
   - [Citation](#citation)
   - [License](#license)
@@ -256,18 +257,6 @@ You may change the scan id to that of the scene you want to explore.
 ### 5. Simulation Datasets & Assets
 
 Simulation environments in HA-VLN combine Matterport3D architecture meshes with HAPS 2.0 dynamic human motions and HA-R2R navigation instructions.
-
-#### 🤗 Hugging Face Dataset Hub (fly1113/HA-VLN)
-
-All core dataset components, dynamic human models, and pretrained checkpoints are officially centralized on Hugging Face at [**fly1113/HA-VLN**](https://huggingface.co/datasets/fly1113/HA-VLN):
-
-| Component | Description | Structure / Files |
-|:---|:---|:---|
-| **`HA-R2R/`** | Human-aware navigation instructions & continuous episodes | `train/`, `val_seen/`, `val_unseen/` (`.json.gz`) |
-| **`HAPS2_0/`** | 486 dynamic 3D human motion SMPL models across 26 regions | `HAPS2_0.zip` (120-frame GLB motion sequences) |
-| **`checkpoints/`** | Official pre-trained baseline model weights (HA-VLN-CMA) | `HA-VLN-CMA/ckpt.39.pth` |
-
-You can browse the dataset repository, files, and dataset cards directly on [Hugging Face](https://huggingface.co/datasets/fly1113/HA-VLN).
 
 #### Dataset Organization
 
@@ -593,7 +582,19 @@ python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type inference
 
 ---
 
+## 🤗 Hugging Face Hub (fly1113/HA-VLN)
 
+All core dataset components, dynamic 3D human models, and pre-trained baseline checkpoints are officially centralized on Hugging Face at [**fly1113/HA-VLN**](https://huggingface.co/datasets/fly1113/HA-VLN):
+
+| Component | Description | Structure / Files |
+|:---|:---|:---|
+| **`HA-R2R/`** | Human-aware navigation instructions & continuous episodes | `train/`, `val_seen/`, `val_unseen/` (`.json.gz`) |
+| **`HAPS2_0/`** | 486 dynamic 3D human motion SMPL models across 26 regions | `HAPS2_0.zip` (120-frame GLB motion sequences) |
+| **`checkpoints/`** | Official pre-trained baseline model weights (HA-VLN-CMA) | `HA-VLN-CMA/ckpt.39.pth` |
+
+You can explore the files, dataset cards, and online documentation directly at [huggingface.co/datasets/fly1113/HA-VLN](https://huggingface.co/datasets/fly1113/HA-VLN).
+
+---
 
 ## Contributing
 
