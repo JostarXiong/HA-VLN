@@ -300,14 +300,15 @@ huggingface-cli download fly1113/HA-VLN --include "ddppo-models/*" --local-dir D
 ```
 
 <details>
-<summary><b>Alternative: Download via Script (Google Drive)</b></summary>
+<summary><b>Alternative: Download via Script & Standalone Links (Google Drive)</b></summary>
 <br>
 
-If you prefer downloading HA-R2R and HAPS 2.0 via Google Drive instead of Hugging Face (`gdown` required):
-
-```bash
-bash scripts/download_data.sh
-```
+- **HA-R2R & HAPS 2.0 via Google Drive** (`gdown` required):
+  ```bash
+  bash scripts/download_data.sh
+  ```
+- **Pretrained Depth Encoder Weights (Direct Link)**:
+  Download from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extract contents to `Data/ddppo-models/{model}.pth`.
 
 </details>
 
@@ -325,6 +326,12 @@ Each **120-frame SMPL mesh sequence** $\mathcal{H} = \langle h_1, h_2, \ldots, h
 
 <div align="center">
   <img src="demo/gifs/havln.gif" alt="image2" width="700"/>
+</div>
+
+**Overall View of Nine Annotated Scenarios from HA-VLN Simulator (90 scans in total)** 
+
+<div align="center">
+  <img src="demo/figs/overview_example-1.png" alt="image2" width="700"/>
 </div>
 
 **Single Humans with Movements (910 Humans in total)** 
@@ -366,7 +373,35 @@ These examples illustrate the diversity of **human-aligned navigation instructio
 *(Purple indicates human movements; Blue indicates agent-human interactions).*
 
 ##### HA-R2R Instruction Generation
-To generate new instructions for the **HA-R2R dataset**, we employ **ChatGPT-4o** and **LLaMA-3-8B-Instruct** to contextually enrich scene descriptions based on R2R-CE using a few-shot prompt:
+
+To generate new instructions for the **HA-R2R dataset**, we employ **ChatGPT-4o** and **LLaMA-3-8B-Instruct** to **contextually enrich and expand scene information** based on the original instructions from the **R2R-CE dataset**.
+
+**Few-Shot Prompting Approach**  
+Our approach utilizes a **few-shot template prompt**, consisting of:
+- **A system prompt** 
+- **A set of few-shot examples** 
+
+The **system prompt** primes the LLMs with the **context and requirements** for generating **navigation instructions** in human-populated environments. It outlines the **desired characteristics**, such as:
+- **Relevance** to the navigation task,
+- **Integration of human activities and agent interactions**, and
+- **Precision in describing environmental details**.
+
+The **few-shot examples** serve as **guidelines** for how the instructions should be structured, demonstrating:
+- **Incorporation of human activities**,
+- **Use of relative position information**, and
+- **Integration with original navigation instructions**.
+
+For instance, one **example** includes:
+> *“You will notice someone quietly making a phone call, so please remain quiet as you move.”*
+
+**Iterative Refinement Process**  
+Initially, the models produced **irrelevant or subjective content** and lacked sufficient **detail about human activities**. To improve this:
+1. We **reviewed outputs** and identified discrepancies.
+2. We **refined the system prompt** to emphasize **neutral tone** and **avoid subjective descriptions**.
+3. We **updated few-shot examples** to demonstrate **desired level of detail**.
+4. Through multiple iterations, we ensured that **scene-enriched instructions** remained coherent and relevant to **HA-R2R**.
+
+**LLM Prompt for HA-R2R Instruction Generation**
 
 ```json
 {
@@ -374,12 +409,54 @@ To generate new instructions for the **HA-R2R dataset**, we employ **ChatGPT-4o*
   "examples": "... //examples in Listing 4",
   "user": "Input:\n[instruction_text]: \"...\";\n[start]: \"...\";\n[during]: \"...\";\n[end]: \"...\";\n\nPlease provide an objective, step-by-step description of the path, focusing on the objects and human activities observed at each stage of the navigation (beginning, during, and end). Expand your description by including character actions, objective descriptions of objects, and details of the movement process. Your description should maintain a neutral tone and avoid embellishments. Please simulate the robot's movement along the path, while incorporating possible connections or interactions between the robot, objects, and human activities.\n\nOutput: ... //generation"
 }
+
+{
+  "example_1": {
+    "input": {
+      "instruction_text": "Go through the doorway to the hall. Go down the hall past the landing. Take the first door on the right and stop in the doorway.",
+      "start": "other room: A person using the room for a quiet phone call.",
+      "during": "other room: A person using the room for a quiet phone call.",
+      "end": "hallway: An individual cleaning or vacuuming."
+    },
+    "output": "You should start from the room. Before you walk through the doorway into the hallway, you will notice someone quietly making a phone call, so please remain quiet as you move. Then, proceed down the hallway past the landing. As you continue through the corridor, you will see a responsible cleaner using a vacuum to tidy up. Finally, your destination is at the end of the hallway, enter the first door on the right and stop in the doorway."
+  }
+}
 ```
 
 #### Human Activities Annotation Pipeline
-- **Stage 1 (Coarse Annotation)**: Assign human motions to regions and objects using Particle Swarm Optimization (PSO) under safety distance constraints ($\epsilon = 1m$).
-- **Stage 2 (Fine Annotation)**: 9 RGB cameras surround each human model to refine position and orientation, eliminating clipping issues.
-- **Multi-Human Interaction**: LLM-assisted multi-human interactions (72 pairs of two humans, 59 groups of three, 15 groups of four).
+
+##### Stage 1: Coarse Annotation
+- **Goal:** Assign human motions to specific **regions** and **objects** using a **coarse-to-fine approach**.
+- **Process:**
+  - Filter human motions $\mathbf{H}$ based on region $\mathbf{R}$ and object list $\mathbf{O}$.
+  - Match motions $h_i$ with objects $j_i$ using **semantic similarity**.
+  - Optimize human placements $\mathbf{p}_{\text{opt}}^{h_i}$ using **Particle Swarm Optimization (PSO)**.  
+- **Constraints:**
+  - Search space limited by **region boundaries**.
+  - Maintain **minimum safe distance** $\epsilon = 1\text{m}$ from other objects.
+  - Ensures **naturalistic human placements** for training navigation agents.
+
+##### Stage 2: Fine Annotation
+- **Inspired by:** Real-world **3D skeleton tracking** techniques.
+- **Setup:**
+  - **9 RGB cameras** surround each human model to refine **position & orientation**.
+  - **Multi-view capture** to correct **clipping issues** with surrounding objects.
+- **Camera Angles:**
+  - **8 side cameras:** $\theta_{\text{lr}}^{i} = \frac{\pi i}{8}$, alternate **up/down tilt**.
+  - **1 overhead camera:** $\theta_{\text{ud}}^{9} = \frac{\pi}{2}$.
+- **Scale:** 529 human models annotated in **374 regions** across **90 scans**.
+
+##### Multi-Human Interaction & Motion Enrichment
+- **Goal:** Increase **scene diversity** and **human interactions**.
+- **Process:**
+  - Use **LLMs** to generate new multi-human interactions.
+  - **Manual refinement (4 rounds)** ensures consistency.
+  - Place new motions relative to objects & use **multi-camera annotation**.
+- **Result:**  
+  - **910 human models** across **428 regions**.
+  - **Complex motions**: Walking downstairs, climbing stairs.
+  - **Interaction stats:** 72 **two-human pairs**, 59 **three-human pairs**, 15 **four-human groups**.
+- **Impact:** Enables precise **social modeling** for human-aware navigation.
 
 <div align="center">
   <img src="demo/figs/dataset_analy.png" alt="image" width="500"/>
@@ -491,7 +568,7 @@ cd "$HA_VLN_ROOT"
 <details>
 <summary>Legacy Python 3.7 Environment (Historical Reference)</summary>
 
-These commands retain the original software stack for historical reference:
+These commands retain the original software stack for historical reference. Please install `habitat-lab` (v0.1.7) and `habitat-sim` (v0.1.7) following [ETPNav](https://github.com/MarSaKi/ETPNav/) (note that this uses `python==3.7`):
 ```bash
 conda create -n havlnce python=3.7
 conda activate havlnce
