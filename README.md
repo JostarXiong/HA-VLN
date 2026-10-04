@@ -305,6 +305,18 @@ Simulation assets are modularly hosted in our Hugging Face repository [fly1113/H
   huggingface-cli download fly1113/HA-VLN --include "ddppo-models/*" --local-dir Data --repo-type dataset
   ```
 
+<details>
+<summary><b>Alternative: Download via Script (Google Drive)</b></summary>
+<br>
+
+If you prefer downloading HA-R2R and HAPS 2.0 via Google Drive instead of Hugging Face (`gdown` required):
+
+```bash
+bash scripts/download_data.sh
+```
+
+</details>
+
 #### HAPS Dataset 2.0 (3D Human Motion Models)
 
 In real-world scenarios, human motion typically adapts and interacts with the surrounding region. The proposed **Human Activity and Pose Simulation (HAPS) Dataset 2.0** improves upon [**HAPS 1.0**](https://github.com/lpercc/HA3D_simulator/) by making the following enhancements:  
@@ -378,18 +390,6 @@ To generate new instructions for the **HA-R2R dataset**, we employ **ChatGPT-4o*
 <div align="center">
   <img src="demo/figs/dataset_analy.png" alt="image" width="500"/>
 </div>
-
-<details>
-<summary><b>Alternative: Download via Script (Google Drive)</b></summary>
-<br>
-
-If you prefer downloading HA-R2R and HAPS 2.0 via Google Drive instead of Hugging Face (`gdown` required):
-
-```bash
-bash scripts/download_data.sh
-```
-
-</details>
 
 ---
 
