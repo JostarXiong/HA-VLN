@@ -98,7 +98,8 @@ cd HA-VLN
 All scene meshes, human activities, and baseline checkpoints reside in `Data/`:
 
 ```bash
-# 1. Download Matterport3D scene meshes into Data/scene_datasets (license required: https://niessner.github.io/Matterport/)
+# 1. Download Matterport3D scene meshes into Data/scene_datasets
+# License required: https://niessner.github.io/Matterport/
 python2 download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
 
 # 2. 1-Click download HA-R2R, HAPS 2.0, annotations, and pretrained models from Hugging Face
