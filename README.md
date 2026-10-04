@@ -79,7 +79,7 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
     - [3. Human Activity Monitoring & Counting](#3-human-activity-monitoring--counting)
     - [4. Interactive Scene Exploration](#4-interactive-scene-exploration)
     - [5. Simulation Datasets & Assets](#5-simulation-datasets--assets)
-    - [6. Native Simulator Installation (Optional)](#6-native-simulator-installation-optional)
+    - [6. Simulator Installation](#6-simulator-installation)
   - [🤖 HA-VLN-CMA Baseline Agent (agent)](#-ha-vln-cma-baseline-agent-agent)
     - [1. Policy Architecture](#1-policy-architecture)
     - [2. Agent Setup & Dependencies](#2-agent-setup--dependencies)
@@ -320,9 +320,7 @@ These examples illustrate the diversity of **human-aligned navigation instructio
   <img src="demo/figs/instruction_length_comparison_v2.png" alt="image" width="400"/>
 </div>
 
-<details>
-<summary><b>Instruction Examples Table & Generation Prompt</b></summary>
-<br>
+#### Instruction Examples Table
 
 | **Instruction Example** |
 |:-------------------------|
@@ -343,8 +341,6 @@ To generate new instructions for the **HA-R2R dataset**, we employ **ChatGPT-4o*
   "user": "Input:\n[instruction_text]: \"...\";\n[start]: \"...\";\n[during]: \"...\";\n[end]: \"...\";\n\nPlease provide an objective, step-by-step description of the path, focusing on the objects and human activities observed at each stage of the navigation (beginning, during, and end). Expand your description by including character actions, objective descriptions of objects, and details of the movement process. Your description should maintain a neutral tone and avoid embellishments. Please simulate the robot's movement along the path, while incorporating possible connections or interactions between the robot, objects, and human activities.\n\nOutput: ... //generation"
 }
 ```
-
-</details>
 
 #### Human Activities Annotation Pipeline
 - **Stage 1 (Coarse Annotation)**: Assign human motions to regions and objects using Particle Swarm Optimization (PSO) under safety distance constraints ($\epsilon = 1m$).
@@ -372,7 +368,59 @@ If you prefer downloading from Google Drive instead of Hugging Face:
 
 ---
 
-### 6. Native Simulator Installation (Optional)
+### 6. Simulator Installation
+
+The HA-VLN Simulator relies on Habitat-Sim 0.1.7 with headless EGL rendering support. We provide both a pre-built Docker image (recommended for zero-configuration deployment) and native Conda setup instructions.
+
+#### Option A: Docker Environment (Recommended)
+
+Our Docker image pre-configures CUDA 11.8, PyTorch 2.0.1, Habitat-Sim 0.1.7, Habitat-Lab 0.1.7, and headless graphics drivers (`libEGL`, `libGLX`), enabling out-of-the-box execution across Linux and WSL2 without dependency conflicts.
+
+1. **Pull the Docker image**:
+   ```bash
+   IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:78a62cd176d2fd7d0e2825f4cb5be2488ebc5f1a354649b7b4f536a98f1054f4
+   docker pull "$IMAGE"
+   ```
+
+2. **Launch an interactive shell in the container**:
+   ```bash
+   docker run --gpus all -it --rm \
+     --shm-size 16g \
+     --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
+     --mount type=bind,source="$(pwd)/Data",target=/workspace/HA-VLN/Data \
+     --mount type=bind,source="$(pwd)/Data",target=/data/havln2 \
+     --workdir /workspace/HA-VLN \
+     "$IMAGE" bash
+   ```
+
+3. **Run Simulator scripts inside Docker**:
+   You can run simulator pipelines directly inside the interactive container, or pass the command directly:
+   ```bash
+   # Multi-view Human-Scene Fusion rendering
+   docker run --gpus all -it --rm \
+     --shm-size 16g \
+     --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
+     --mount type=bind,source="$(pwd)/Data",target=/workspace/HA-VLN/Data \
+     --mount type=bind,source="$(pwd)/Data",target=/data/havln2 \
+     --workdir /workspace/HA-VLN/scripts \
+     "$IMAGE" python human_scene_fusion.py
+
+   # Interactive keyboard exploration (requires display/X11 forwarding if GUI attached)
+   docker run --gpus all -it --rm \
+     --shm-size 16g \
+     --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
+     --mount type=bind,source="$(pwd)/Data",target=/workspace/HA-VLN/Data \
+     --mount type=bind,source="$(pwd)/Data",target=/data/havln2 \
+     --workdir /workspace/HA-VLN/scripts \
+     "$IMAGE" python demo.py --scan 1LXtFkjw3qL
+   ```
+
+> **Key Docker Flags**:
+> - `--gpus all`: Grants container access to host GPUs for headless EGL rendering.
+> - `--shm-size 16g`: Allocates shared memory for PyTorch dataloading and multi-threading.
+> - `--mount type=bind,...`: Dual-mounts host `Data/` to both `/workspace/HA-VLN/Data` and `/data/havln2`, satisfying both legacy and current config paths without manual edits.
+
+#### Option B: Native Installation (Optional)
 
 <details>
 <summary><b>Native Simulator Setup (Python 3.8 / CUDA 11.8)</b></summary>
