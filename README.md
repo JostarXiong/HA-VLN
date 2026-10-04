@@ -135,7 +135,11 @@ docker run --gpus all -it --rm \
 
 ## 🎮 HA-VLN Simulator (HASimulator)
 
-The **HA-VLN Simulator** extends Habitat-Sim with dynamic 3D human motion simulation, real-time navigation mesh recomputation, multi-view human-scene fusion, and interactive navigation tools.
+The **HA-VLN Simulator** extends Habitat-Sim with dynamic 3D human motion simulation, real-time navigation mesh recomputation, multi-view human-scene fusion, social distance measurements, and interactive navigation tools.
+
+<div align="center">
+  <img src="demo/figs/simulator_draft_v2-1.png" alt="HA-VLN Simulator Architecture" width="700"/>
+</div>
 
 ### 1. Real-time Human Rendering
 
@@ -155,35 +159,47 @@ SIMULATOR:
 
 ---
 
-### 2. Human-Scene Fusion
+### 2. Human-Scene Fusion (Multi-View Rendering)
 
-We use nine cameras to annotate any anomalies, such as levitation or model clipping, in humans added to the scene. Check details in [scripts/human_scene_fusion.py](scripts/human_scene_fusion.py).
-- **Inspired by:** Real-world **3D skeleton tracking** techniques.
-- **Setup:**
-  - **9 RGB cameras** surround each human model to refine **position & orientation**.
-  - **Multi-view capture** to correct **clipping issues** with surrounding objects.
-- **Camera Angles:**
-  - **8 side cameras:** $\theta_{\text{lr}}^{i} = \frac{\pi i}{8}$, alternate **up/down tilt**.
-  - **1 overhead camera:** $\theta_{\text{ud}}^{9} = \frac{\pi}{2}$.
+To detect visual anomalies (such as floating meshes or model clipping) and verify human alignment within photorealistic scenes, the simulator provides a multi-view human-scene fusion rendering pipeline in [scripts/human_scene_fusion.py](scripts/human_scene_fusion.py).
 
-To reproduce the [**Multi-view human annotation videos**](https://drive.google.com/drive/folders/1XvGHgLJ0MFDNY_k_iVwE_oGpfBfBaZif?usp=sharing), run the following script:
+To reproduce the [**Multi-view human annotation videos**](https://drive.google.com/drive/folders/1XvGHgLJ0MFDNY_k_iVwE_oGpfBfBaZif?usp=sharing), run the fusion rendering script:
 ```bash
 cd scripts
 python3 human_scene_fusion.py
 ```
-To modify the output data path, change the following line in [scripts/human_scene_fusion.py](scripts/human_scene_fusion.py), or the results will be output in "scripts/test" by default:
-```python
-output_path = "test/"
-```
+*(Rendered frames are output to `scripts/test/` by default. You can modify `output_path` inside [scripts/human_scene_fusion.py](scripts/human_scene_fusion.py)).*
 
 ---
 
-### 3. Human Activity Monitoring & Counting
+### 3. Simulator APIs & Social Measurements
 
-As detailed in the HA-VLN 2.0 paper (Section B.6), the simulator's Continuous Environment API tracks and analyzes dynamic human activity in real time. To monitor human presence and evaluate bystander interactions, the simulator provides an open-set perception module based on [Grounding DINO](https://github.com/IDEA-Research/GroundingDINO) ([HASimulator/detector.py](HASimulator/detector.py)) that detects visible individuals and counts them from RGB camera observations using the text prompt `"human"`.
+As detailed in Section 4 of the HA-VLN 2.0 paper, the simulator exposes unified APIs and evaluation measures in [HASimulator/measures.py](HASimulator/measures.py) and [HASimulator/metric.py](HASimulator/metric.py) to assess agent behavior and personal-space compliance:
 
-To enable human counting in the simulator, set `HUMAN_COUNTING: True` in [HASimulator/config/HAVLNCE_task.yaml](HASimulator/config/HAVLNCE_task.yaml):
+- **`distance_to_human`**: Computes the exact Euclidean distance and relative angle between the agent and all dynamic humans in the scene at each timestep.
+- **`collisions_detail`**: Tracks per-step collisions with environment obstacles and humans, distinguishing physical collisions from social-distance infractions.
+- **`human_counting`**: Detects and counts visible individuals within the agent's current egocentric observation using an open-set perception detector ([HASimulator/detector.py](HASimulator/detector.py)).
+- **Social Evaluation Metrics**: Implements benchmark evaluation metrics in [HASimulator/metric.py](HASimulator/metric.py), including **Total Collision Rate (TCR)**, **Collision Rate (CR)**, **Success Rate (SR)**, and **Navigation Error (NE)**.
+
+#### Task Configuration (`config/HAVLNCE_task.yaml`)
+
+To enable social distance measurements and human counting, configure [HASimulator/config/HAVLNCE_task.yaml](HASimulator/config/HAVLNCE_task.yaml):
+
 ```yaml
+TASK:
+  MEASUREMENTS: [
+    DISTANCE_TO_GOAL,
+    SUCCESS,
+    SPL,
+    NDTW,
+    PATH_LENGTH,
+    ORACLE_SUCCESS,
+    STEPS_TAKEN,
+    COLLISIONS,
+    COLLISIONS_DETAIL,
+    DISTANCE_TO_HUMAN
+  ]
+
 SIMULATOR:
   HUMAN_COUNTING: True
 ```
@@ -192,7 +208,7 @@ SIMULATOR:
 <summary><b>Setup GroundingDINO for Human Counting (Optional)</b></summary>
 <br>
 
-*Note: This perception module is an optional simulator feature for human tracking, observation logging, and reward shaping. Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
+*Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and reward shaping. Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
 
 If you wish to enable the real-time human detection and counting module:
 
