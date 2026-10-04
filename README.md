@@ -391,49 +391,21 @@ Data/
 └── ddppo-models/             # Pretrained PointGoal ResNet-50 visual depth encoder
 ```
 
-### 2. Dataset Download & Breakdown
+### 2. Download Datasets
 
-We distribute all HA-VLN simulation assets, motion models, annotations, and observation backbones through **Hugging Face**, while the underlying architectural 3D meshes are provided by **Matterport3D**.
-
-#### 1. Matterport3D Scene Meshes (`Data/scene_datasets`)
-- **License & Access**: Matterport3D requires signing the official academic Terms of Use. Request access at the [Matterport3D Project Page](https://niessner.github.io/Matterport/) to receive your personal download script and authentication token.
-- **Download Command**:
-  ```bash
-  python2 download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
-  ```
-
-#### 2. HA-VLN Simulation Assets (`fly1113/HA-VLN` on Hugging Face)
-
-Simulation assets are modularly hosted on [fly1113/HA-VLN](https://huggingface.co/datasets/fly1113/HA-VLN). Download individual components based on your research needs:
+To use the simulator, download the [Matterport3D Dataset](https://niessner.github.io/Matterport/) (access required):
 
 ```bash
-pip install huggingface-hub
-
-# 1. HA-R2R navigation episodes
-huggingface-cli download fly1113/HA-VLN --include "HA-R2R/*" --local-dir Data --repo-type dataset
-
-# 2. HAPS 2.0 3D dynamic human motions
-huggingface-cli download fly1113/HA-VLN --include "HAPS2_0/*" --local-dir Data --repo-type dataset
-
-# 3. Multi-human motion & placement annotations (human_motion.json)
-huggingface-cli download fly1113/HA-VLN --include "Multi-Human-Annotations/*" --local-dir Data --repo-type dataset
-
-# 4. Pretrained PointGoal ResNet-50 visual depth observation backbone
-huggingface-cli download fly1113/HA-VLN --include "ddppo-models/*" --local-dir Data --repo-type dataset
+python2 download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
 ```
 
-<details>
-<summary><b>Alternative: Download via Script & Standalone Links (Google Drive)</b></summary>
-<br>
+For HA-R2R episodes, HAPS 2.0 motions, annotations, and pretrained models, you can download them in one command from [**Hugging Face (fly1113/HA-VLN)**](https://huggingface.co/datasets/fly1113/HA-VLN) as shown in [Quick Start](#2-download-datasets), or via the download script (Google Drive, `gdown` required):
 
-- **HA-R2R & HAPS 2.0 via Google Drive** (`gdown` required):
-  ```bash
-  bash scripts/download_data.sh
-  ```
-- **Pretrained Depth Encoder Weights (Direct Link)**:
-  Download from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extract contents to `Data/ddppo-models/{model}.pth`.
+```bash
+bash scripts/download_data.sh
+```
 
-</details>
+Pretrained PointGoal depth encoder weights are also available from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) (extract to `Data/ddppo-models/{model}.pth`).
 
 ### 3. HAPS Dataset 2.0 (3D Human Motion Models)
 
