@@ -388,17 +388,14 @@ To generate new instructions for the **HA-R2R dataset**, we employ **ChatGPT-4o*
 </div>
 
 <details>
-<summary><b>Alternative: Google Drive & Standalone Download Links</b></summary>
+<summary><b>Alternative: Download via Script (Google Drive)</b></summary>
 <br>
 
-If you prefer downloading from Google Drive instead of Hugging Face:
-- **Automated Script** (`gdown` required):
-  ```bash
-  bash scripts/download_data.sh
-  ```
-- **Google Drive Folder**: [HA-VLN Google Drive](https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing)
-- **Pretrained Depth Encoder Weights**:
-  Download from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extract to `Data/ddppo-models/{model}.pth`.
+If you prefer downloading HA-R2R and HAPS 2.0 via Google Drive instead of Hugging Face (`gdown` required):
+
+```bash
+bash scripts/download_data.sh
+```
 
 </details>
 
