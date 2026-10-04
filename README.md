@@ -76,13 +76,13 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
     - [3. Human Activity Monitoring & Counting](#3-human-activity-monitoring--counting)
     - [4. Interactive Scene Exploration](#4-interactive-scene-exploration)
     - [5. Simulator Installation](#5-simulator-installation)
-  - [📊 Simulation Datasets & Benchmark (Data)](#-simulation-datasets--benchmark-data)
+  - [📊 HAPS 2.0 & HA-R2R Datasets (Data)](#-haps-20--ha-r2r-datasets-data)
     - [1. Dataset Organization](#1-dataset-organization)
     - [2. Dataset Download & Breakdown](#2-dataset-download--breakdown)
     - [3. HAPS Dataset 2.0 (3D Human Motion Models)](#3-haps-dataset-20-3d-human-motion-models)
     - [4. HA-R2R Dataset (Navigation Instructions)](#4-ha-r2r-dataset-navigation-instructions)
     - [5. Human Activities Annotation Pipeline](#5-human-activities-annotation-pipeline)
-  - [🤖 HA-VLN Baseline Agents (agent)](#-ha-vln-baseline-agents-agent)
+  - [🤖 HA-VLN-CMA Baseline Agent (agent)](#-ha-vln-cma-baseline-agent-agent)
     - [1. Policy Architecture](#1-policy-architecture)
     - [2. Agent Setup & Dependencies](#2-agent-setup--dependencies)
     - [3. Training from Scratch](#3-training-from-scratch)
@@ -378,7 +378,7 @@ cd $(git rev-parse --show-toplevel)
 
 ---
 
-## 📊 Simulation Datasets & Benchmark (Data)
+## 📊 HAPS 2.0 & HA-R2R Datasets (Data)
 
 Simulation environments in HA-VLN combine Matterport3D architecture meshes with HAPS 2.0 dynamic human motions and HA-R2R navigation instructions.
 
@@ -591,7 +591,7 @@ Initially, the models produced **irrelevant or subjective content** and lacked s
 
 ---
 
-## 🤖 HA-VLN Baseline Agents (agent)
+## 🤖 HA-VLN-CMA Baseline Agent (agent)
 
 The **HA-VLN-CMA** agent provides a baseline vision-and-language policy for continuous environments with dynamic multi-human interactions.
 
