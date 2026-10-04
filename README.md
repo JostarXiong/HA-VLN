@@ -259,7 +259,7 @@ Simulation environments in HA-VLN combine Matterport3D architecture meshes with 
 
 #### Dataset Organization
 
-All simulation assets, meshes, human motions, and model weights reside in the `Data/` directory:
+All simulation environments, meshes, human motions, and sensor models reside in the `Data/` directory:
 
 ```text
 Data/
@@ -267,13 +267,12 @@ Data/
 ├── HAPS2_0/                  # 486 dynamic 3D human motion SMPL models (120 frames each)
 ├── HA-R2R/                   # Human-aware navigation instructions (train, val_seen, val_unseen)
 ├── Multi-Human-Annotations/  # Human motion trajectory and placement metadata (human_motion.json)
-├── ddppo-models/             # Pretrained ResNet-50 visual backbone weights (PointGoal depth)
-└── checkpoints/              # Pretrained baseline weights (HA-VLN-CMA)
+└── ddppo-models/             # Pretrained PointGoal ResNet-50 visual depth encoder
 ```
 
 #### Standard Dataset Download & Setup
 
-We distribute all HA-VLN dataset assets, motion models, annotations, and pretrained weights through **Hugging Face**, while the underlying architectural 3D meshes are provided by **Matterport3D**.
+We distribute all HA-VLN simulation assets, motion models, annotations, and observation backbones through **Hugging Face**, while the underlying architectural 3D meshes are provided by **Matterport3D**.
 
 ##### 1. Matterport3D Scene Meshes (`Data/scene_datasets`)
 - **License & Access**: Matterport3D requires signing the official academic Terms of Use. Request access at the [Matterport3D Project Page](https://niessner.github.io/Matterport/) to receive your personal download script and authentication token.
@@ -305,13 +304,8 @@ All task annotations, dynamic human meshes, motion trajectories, and visual enco
   huggingface-cli download fly1113/HA-VLN --include "Multi-Human-Annotations/*" --local-dir Data --repo-type dataset
   ```
 
-##### 3. Pretrained Weights Setup
-- **Visual Depth Encoder**: The PointGoal pre-trained ResNet-50 backbone is included in the Hugging Face download and located at `Data/ddppo-models/gibson-2plus-resnet50.pth`.
-- **Baseline CMA Policy**: If evaluating the released HA-VLN-CMA baseline model, copy the checkpoint to the agent checkpoint directory:
-  ```bash
-  mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
-  cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
-  ```
+##### 3. Visual Depth Observation Backbone (`Data/ddppo-models`)
+Simulator visual depth observations use a PointGoal pre-trained ResNet-50 depth encoder, automatically included in the Hugging Face download at `Data/ddppo-models/gibson-2plus-resnet50.pth`.
 
 #### HAPS Dataset 2.0 (3D Human Motion Models)
 
@@ -543,7 +537,16 @@ cd "$HA_VLN_ROOT"
 python -m pip install -r requirements-py38.txt
 ```
 
-Depth observations are encoded using a PointGoal pre-trained ResNet. If downloaded via Hugging Face, weights are located at `Data/ddppo-models/gibson-2plus-resnet50.pth`.
+Depth observations are encoded using a PointGoal pre-trained ResNet (`Data/ddppo-models/gibson-2plus-resnet50.pth`).
+
+#### Pretrained Baseline Checkpoint
+
+To evaluate our released pretrained HA-VLN-CMA model directly without training from scratch, place the released checkpoint:
+
+```bash
+mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
+cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
+```
 
 ### 3. Training from Scratch
 
