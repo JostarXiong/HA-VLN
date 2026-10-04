@@ -560,7 +560,7 @@ Initially, the models produced **irrelevant or subjective content** and lacked s
 
 ## Contributing
 
-We welcome contributions to this project! Please contact yd2616@columbia.edu or wufengyi98@gmail.com.
+We welcome contributions to this project! Please contact yfeidong@uw.edu , fyiwu@uw.edu , or bohanx2@uw.edu.
 
 ## Citation
 
