@@ -86,6 +86,8 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 
 ## 🚀 Quick Start
 
+In this section, you will download the necessary datasets and deploy the essential environment within Docker. Then, you can reproduce our proposed HA-VLN-CMA baseline model and observe its benchmark performance. Detailed documentation for simulator usage, agent training, and dataset details is provided in the following sections.
+
 ### 1. Clone Repository
 
 ```bash
