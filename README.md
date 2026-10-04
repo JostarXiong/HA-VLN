@@ -76,9 +76,10 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
   - [🎮 HA-VLN Simulator (HASimulator)](#-ha-vln-simulator-hasimulator)
     - [1. Real-time Human Rendering](#1-real-time-human-rendering)
     - [2. Human-Scene Fusion](#2-human-scene-fusion)
-    - [3. Interactive Scene Exploration](#3-interactive-scene-exploration)
-    - [4. Simulation Datasets & Assets](#4-simulation-datasets--assets)
-    - [5. Native Simulator Installation (Optional)](#5-native-simulator-installation-optional)
+    - [3. Human Activity Monitoring & Counting](#3-human-activity-monitoring--counting)
+    - [4. Interactive Scene Exploration](#4-interactive-scene-exploration)
+    - [5. Simulation Datasets & Assets](#5-simulation-datasets--assets)
+    - [6. Native Simulator Installation (Optional)](#6-native-simulator-installation-optional)
   - [🤖 HA-VLN-CMA Baseline Agent (agent)](#-ha-vln-cma-baseline-agent-agent)
     - [1. Policy Architecture](#1-policy-architecture)
     - [2. Agent Setup & Dependencies](#2-agent-setup--dependencies)
@@ -193,7 +194,49 @@ output_path = "test/"
 
 ---
 
-### 3. Interactive Scene Exploration
+### 3. Human Activity Monitoring & Counting
+
+As detailed in the HA-VLN 2.0 paper (Section B.6), the simulator's Continuous Environment API tracks and analyzes dynamic human activity in real time. To monitor human presence and evaluate bystander interactions, the simulator provides an open-set perception module based on [Grounding DINO](https://github.com/IDEA-Research/GroundingDINO) ([HASimulator/detector.py](HASimulator/detector.py)) that detects visible individuals and counts them from RGB camera observations using the text prompt `"human"`.
+
+To enable human counting in the simulator, set `HUMAN_COUNTING: True` in [HASimulator/config/HAVLNCE_task.yaml](HASimulator/config/HAVLNCE_task.yaml):
+```yaml
+SIMULATOR:
+  HUMAN_COUNTING: True
+```
+
+<details>
+<summary><b>Setup GroundingDINO for Human Counting (Optional)</b></summary>
+<br>
+
+*Note: This perception module is an optional simulator feature for human tracking, observation logging, and reward shaping. Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
+
+If you wish to enable the real-time human detection and counting module:
+
+```bash
+cd "$HA_VLN_ROOT"
+conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
+  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
+export CUDA_HOME="$CONDA_PREFIX"
+export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
+export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
+
+git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
+git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
+MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
+  -e HASimulator/GroundingDINO
+
+mkdir -p HASimulator/GroundingDINO/weights
+curl -fL --retry 3 \
+  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
+  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
+python -m pip check
+```
+
+</details>
+
+---
+
+### 4. Interactive Scene Exploration
 
 You can navigate through a scene interactively using the keyboard:
 | Key | Action        |
@@ -210,7 +253,7 @@ You may change the scan id to that of the scene you want to explore.
 
 ---
 
-### 4. Simulation Datasets & Assets
+### 5. Simulation Datasets & Assets
 
 Simulation environments in HA-VLN combine Matterport3D architecture meshes with HAPS 2.0 dynamic human motions and HA-R2R navigation instructions.
 
@@ -312,9 +355,8 @@ To generate new instructions for the **HA-R2R dataset**, we employ **ChatGPT-4o*
   <img src="demo/figs/dataset_analy.png" alt="image" width="500"/>
 </div>
 
-#### Alternative Download: Google Drive
 <details>
-<summary><b>Google Drive & Standalone Download Links</b></summary>
+<summary><b>Alternative: Google Drive & Standalone Download Links</b></summary>
 <br>
 
 If you prefer downloading from Google Drive instead of Hugging Face:
@@ -330,7 +372,7 @@ If you prefer downloading from Google Drive instead of Hugging Face:
 
 ---
 
-### 5. Native Simulator Installation (Optional)
+### 6. Native Simulator Installation (Optional)
 
 <details>
 <summary><b>Native Simulator Setup (Python 3.8 / CUDA 11.8)</b></summary>
@@ -421,34 +463,6 @@ python -m pip install -r requirements-py38.txt
 ```
 
 Depth observations are encoded using a PointGoal pre-trained ResNet. If downloaded via Hugging Face, weights are located at `Data/ddppo-models/gibson-2plus-resnet50.pth`.
-
-<details>
-<summary>Optional: Human Counting Diagnostic API & GroundingDINO</summary>
-
-GroundingDINO is only required if you explicitly enable the optional real-time human detection and counting diagnostic API (`SIMULATOR.HUMAN_COUNTING: True`). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.
-
-If you need the counting API:
-```bash
-cd "$HA_VLN_ROOT"
-conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
-  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
-export CUDA_HOME="$CONDA_PREFIX"
-export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
-export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
-
-git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
-git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
-MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
-  -e HASimulator/GroundingDINO
-
-mkdir -p HASimulator/GroundingDINO/weights
-curl -fL --retry 3 \
-  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
-  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
-python -m pip check
-```
-
-</details>
 
 ### 3. Training from Scratch
 
