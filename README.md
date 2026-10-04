@@ -259,23 +259,59 @@ Simulation environments in HA-VLN combine Matterport3D architecture meshes with 
 
 #### Dataset Organization
 
-The simulation expects the following directory structure inside `Data/`:
+All simulation assets, meshes, human motions, and model weights reside in the `Data/` directory:
 
 ```text
 Data/
-├── HA-R2R/
-│   ├── train/
-│   ├── val_seen/
-│   └── val_unseen/
-├── HAPS2_0/
-│   ├── balcony:A_child_excitedly_greeting_a_pet._0/
-│   ├── balcony:A_couple_having_a_quiet,_intimate_conversation._0/
-│   └── ...
-├── Multi-Human-Annotations/
-│   └── human_motion.json
-├── scene_datasets/
-└── ddppo-models/
+├── scene_datasets/           # Matterport3D 3D meshes & segmentations
+├── HAPS2_0/                  # 486 dynamic 3D human motion SMPL models (120 frames each)
+├── HA-R2R/                   # Human-aware navigation instructions (train, val_seen, val_unseen)
+├── Multi-Human-Annotations/  # Human motion trajectory and placement metadata (human_motion.json)
+├── ddppo-models/             # Pretrained ResNet-50 visual backbone weights (PointGoal depth)
+└── checkpoints/              # Pretrained baseline weights (HA-VLN-CMA)
 ```
+
+#### Standard Dataset Download & Setup
+
+We distribute all HA-VLN dataset assets, motion models, annotations, and pretrained weights through **Hugging Face**, while the underlying architectural 3D meshes are provided by **Matterport3D**.
+
+##### 1. Matterport3D Scene Meshes (`Data/scene_datasets`)
+- **License & Access**: Matterport3D requires signing the official academic Terms of Use. Request access at the [Matterport3D Project Page](https://niessner.github.io/Matterport/) to receive your personal download script and authentication token.
+- **Download Command**: Download the essential mesh and segmentation components into `Data/scene_datasets`:
+  ```bash
+  python2 download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
+  ```
+
+##### 2. HA-VLN Simulation Suite (`fly1113/HA-VLN` on Hugging Face)
+All task annotations, dynamic human meshes, motion trajectories, and visual encoder weights are publicly hosted on Hugging Face: [fly1113/HA-VLN](https://huggingface.co/datasets/fly1113/HA-VLN).
+
+- **1-Click Full Download (Recommended)**:
+  Download the complete suite directly into `Data/`:
+  ```bash
+  pip install huggingface-hub
+  huggingface-cli download fly1113/HA-VLN --local-dir Data --repo-type dataset
+  ```
+
+- **Selective Download (Optional)**:
+  If you only need specific components for your research:
+  ```bash
+  # Download only HA-R2R navigation episodes
+  huggingface-cli download fly1113/HA-VLN --include "HA-R2R/*" --local-dir Data --repo-type dataset
+
+  # Download only HAPS 2.0 3D human motions
+  huggingface-cli download fly1113/HA-VLN --include "HAPS2_0/*" --local-dir Data --repo-type dataset
+
+  # Download only human placement annotations
+  huggingface-cli download fly1113/HA-VLN --include "Multi-Human-Annotations/*" --local-dir Data --repo-type dataset
+  ```
+
+##### 3. Pretrained Weights Setup
+- **Visual Depth Encoder**: The PointGoal pre-trained ResNet-50 backbone is included in the Hugging Face download and located at `Data/ddppo-models/gibson-2plus-resnet50.pth`.
+- **Baseline CMA Policy**: If evaluating the released HA-VLN-CMA baseline model, copy the checkpoint to the agent checkpoint directory:
+  ```bash
+  mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
+  cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
+  ```
 
 #### HAPS Dataset 2.0 (3D Human Motion Models)
 
