@@ -70,7 +70,9 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 - [HA-VLN](#ha-vln)
   - [Table of Contents](#-table-of-contents)
   - [🚀 Quick Start](#-quick-start)
-  - [📥 Download Dataset](#-download-dataset)
+    - [1. Environment Setup](#1-environment-setup)
+    - [2. Download Data](#2-download-data)
+    - [3. ⚡ 1-Minute Evaluation with Pretrained CMA Agent](#3--1-minute-evaluation-with-pretrained-cma-agent)
   - [🔄 Dataset Organization](#-dataset-organization)
   - [🖥️ Real-time Human Rendering](#-real-time-human-rendering)
   - [🌆 Human-Scene Fusion](#-human-scene-fusion)
@@ -87,7 +89,9 @@ git clone https://github.com/F1y1113/HA-VLN.git
 cd HA-VLN
 ```
 
-### Docker Environment (Recommended)
+### 1. Environment Setup
+
+#### Option A: Docker (Recommended)
 
 Use our pre-built Docker environment with Python 3.8, PyTorch, CUDA 11.8,
 and Habitat-Sim/Habitat-Lab 0.1.7. Install Docker and the NVIDIA Container
@@ -98,7 +102,7 @@ IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:78a62cd176d2fd7d0e2825f4cb
 docker pull "$IMAGE"
 ```
 
-Prepare the datasets following [Download Dataset](#-download-dataset).
+Prepare the datasets following [Download Data](#2-download-data).
 From the HA-VLN repository root, set `DATA_DIR` to the absolute path of your
 existing dataset directory and start an interactive container:
 
@@ -119,29 +123,7 @@ available through the repository's `Data/` and `/data/havln2` paths.
 Code and data changes persist on the host; packages installed only inside
 this temporary container are removed when it exits.
 
-### ⚡ 1-Minute Evaluation with Pretrained CMA Agent
-
-Quickly verify your environment and reproduce official HA-VLN-CMA evaluation without training:
-
-1. **Mount or download the released CMA checkpoint**:
-   - **[Hugging Face Checkpoint Download](https://huggingface.co/datasets/fly1113/HA-VLN/resolve/main/checkpoints/HA-VLN-CMA/ckpt.39.pth)** (148 MB)
-   ```bash
-   mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
-   curl -fL --retry 3 https://huggingface.co/datasets/fly1113/HA-VLN/resolve/main/checkpoints/HA-VLN-CMA/ckpt.39.pth \
-     -o agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
-   ```
-2. **Run evaluation in one command**:
-   ```bash
-   cd agent
-   python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval
-   ```
-3. **Expected Benchmark Validation Results**:
-   | Split | Score | SR | NE | CR | TCR |
-   |:---|:---:|:---:|:---:|:---:|:---:|
-   | `val_seen` | 15.47 | 0.165 | 6.230 | 0.638 | 13.271 |
-   | `val_unseen` | 11.94 | 0.114 | 6.502 | 0.689 | 22.352 |
-
-### Native Installation
+#### Option B: Native Installation
 
 <details>
 <summary><b>Native Installation (Python 3.8 / CUDA 11.8)</b></summary>
@@ -183,7 +165,7 @@ export EGL_DEVICE_ID=0
 For Python 3.8, use `requirements-py38.txt` as the compatibility constraints
 instead of installing the legacy Habitat-Baselines RL or agent requirements.
 The pinned Gym version avoids the old VLN sensor's `Discrete(0)` incompatibility.
-Prepare scene and human assets using [Download Dataset](#-download-dataset).
+Prepare scene and human assets using [Download Data](#2-download-data).
 
 <details>
 <summary>Alternative: build Habitat-Sim 0.1.7 from source</summary>
@@ -216,7 +198,7 @@ cd "$HA_VLN_ROOT"
 python -m pip install -r requirements-py38.txt
 ```
 
-Follow [Training](#-training) for model execution and prepare the encoder weights described in [Download Dataset](#-download-dataset).
+Follow [Training](#-training) for model execution and prepare the encoder weights described in [Download Data](#2-download-data).
 
 <details>
 <summary>Optional: Human Counting API & GroundingDINO</summary>
@@ -310,19 +292,19 @@ pip install -r requirements.txt
 
 </details>
 
----
+### 2. Download Data
 
-## 📥 Download Dataset
+#### 1. Matterport3D Scenes (License Required)
 
-To use the simulator, download the [Matterport3D Dataset](https://niessner.github.io/Matterport/) (access required).
+Matterport3D scene meshes are required by Habitat-Sim to initialize scene environments. Request access at the [Matterport3D Project](https://niessner.github.io/Matterport/) and download scene assets to `Data/scene_datasets`:
 
 ```bash
 python2 download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
 ```
 
-For the HA-R2R, HAPS 2.0, and validation auxiliary files, choose either Option 1 or Option 2:
+#### 2. HA-VLN Benchmarks & Pretrained Weights
 
-### Option 1: Hugging Face (Recommended)
+##### Option 1: Hugging Face (1-Click, Recommended)
 
 All HA-R2R splits, HAPS 2.0 3D human motions, annotations, and pretrained CMA weights are available on Hugging Face:
 * **Dataset Repository**: [fly1113/HA-VLN on Hugging Face](https://huggingface.co/datasets/fly1113/HA-VLN)
@@ -332,18 +314,61 @@ pip install huggingface-hub
 huggingface-cli download fly1113/HA-VLN --local-dir Data --repo-type dataset
 ```
 
-### Option 2: Google Drive
+##### Option 2: Google Drive
 
-Download and extract the archives from Google Drive:
-* **Google Drive Folder**: [HA-VLN Google Drive](https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing)
-* Or run the automated download script (`gdown` required):
+<details>
+<summary><b>Option 2: Google Drive (Alternative)</b></summary>
+<br>
+
+To download and extract HA-R2R and HAPS 2.0 datasets, simply run (`gdown` required):
+
 ```bash
 bash scripts/download_data.sh
 ```
 
-### Pretrained Depth Encoder Weights
+*(Optional) Pretrained Depth Encoder Weights*: Baseline models encode depth observations using a ResNet pre-trained on PointGoal navigation. If not using Hugging Face (which already includes them), download from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extract to `Data/ddppo-models/{model}.pth`.
 
-Baseline models encode depth observations using a ResNet pre-trained on PointGoal navigation. Those weights can be downloaded from [here](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip). Extract the contents to [Data/ddppo-models](Data/ddppo-models)/{model}.pth.
+</details>
+
+### 3. ⚡ 1-Minute Evaluation with Pretrained CMA Agent
+
+Quickly verify your environment and reproduce official HA-VLN-CMA evaluation without training:
+
+1. **Mount or link the released CMA checkpoint**:
+   If downloaded via Hugging Face (`Option 1`), the checkpoint is already in `Data/checkpoints/HA-VLN-CMA/ckpt.39.pth`. Set up the expected evaluation path:
+   ```bash
+   mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
+   cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
+   ```
+   *(Or download the standalone checkpoint directly)*:
+   ```bash
+   curl -fL --retry 3 https://huggingface.co/datasets/fly1113/HA-VLN/resolve/main/checkpoints/HA-VLN-CMA/ckpt.39.pth \
+     -o agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
+   ```
+
+2. **Run evaluation in one command**:
+   - **Inside Docker**:
+     ```bash
+     DATA_DIR="$(pwd)/Data"
+     docker run --gpus all -it --rm \
+       --shm-size 16g \
+       --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
+       --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
+       --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
+       --workdir /workspace/HA-VLN/agent \
+       "$IMAGE" python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval
+     ```
+   - **Native Environment**:
+     ```bash
+     cd agent
+     python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval
+     ```
+
+3. **Expected Benchmark Validation Results**:
+   | Split | Score | SR | NE | CR | TCR |
+   |:---|:---:|:---:|:---:|:---:|:---:|
+   | `val_seen` | 15.47 | 0.165 | 6.230 | 0.638 | 13.271 |
+   | `val_unseen` | 11.94 | 0.114 | 6.502 | 0.689 | 22.352 |
 
 ---
 
