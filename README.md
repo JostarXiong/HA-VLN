@@ -282,28 +282,24 @@ We distribute all HA-VLN simulation assets, motion models, annotations, and obse
   ```
 
 ##### 2. HA-VLN Simulation Assets (`fly1113/HA-VLN` on Hugging Face)
-Simulation assets are modularly hosted in our Hugging Face repository [fly1113/HA-VLN](https://huggingface.co/datasets/fly1113/HA-VLN). You can download individual components based on your research needs (`pip install huggingface-hub` required):
 
-- **HA-R2R Navigation Episodes** (`Data/HA-R2R`):
-  ```bash
-  huggingface-cli download fly1113/HA-VLN --include "HA-R2R/*" --local-dir Data --repo-type dataset
-  ```
+Simulation assets are modularly hosted on [fly1113/HA-VLN](https://huggingface.co/datasets/fly1113/HA-VLN). Download individual components based on your research needs:
 
-- **HAPS 2.0 3D Human Motions** (`Data/HAPS2_0`):
-  ```bash
-  huggingface-cli download fly1113/HA-VLN --include "HAPS2_0/*" --local-dir Data --repo-type dataset
-  ```
+```bash
+pip install huggingface-hub
 
-- **Multi-Human Motion & Placement Annotations** (`Data/Multi-Human-Annotations`):
-  ```bash
-  huggingface-cli download fly1113/HA-VLN --include "Multi-Human-Annotations/*" --local-dir Data --repo-type dataset
-  ```
+# 1. HA-R2R navigation episodes
+huggingface-cli download fly1113/HA-VLN --include "HA-R2R/*" --local-dir Data --repo-type dataset
 
-- **Visual Depth Observation Backbone** (`Data/ddppo-models`):
-  Pre-trained PointGoal ResNet-50 visual depth encoder:
-  ```bash
-  huggingface-cli download fly1113/HA-VLN --include "ddppo-models/*" --local-dir Data --repo-type dataset
-  ```
+# 2. HAPS 2.0 3D dynamic human motions
+huggingface-cli download fly1113/HA-VLN --include "HAPS2_0/*" --local-dir Data --repo-type dataset
+
+# 3. Multi-human motion & placement annotations (human_motion.json)
+huggingface-cli download fly1113/HA-VLN --include "Multi-Human-Annotations/*" --local-dir Data --repo-type dataset
+
+# 4. Pretrained PointGoal ResNet-50 visual depth observation backbone
+huggingface-cli download fly1113/HA-VLN --include "ddppo-models/*" --local-dir Data --repo-type dataset
+```
 
 <details>
 <summary><b>Alternative: Download via Script (Google Drive)</b></summary>
