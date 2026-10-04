@@ -67,31 +67,12 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 
 ## Table of Contents
 
-- [HA-VLN](#ha-vln)
-  - [Table of Contents](#-table-of-contents)
-  - [🚀 Quick Start](#-quick-start)
-  - [🎮 HA-VLN Simulator (HASimulator)](#-ha-vln-simulator-hasimulator)
-    - [1. Real-time Human Rendering](#1-real-time-human-rendering)
-    - [2. Human-Scene Fusion](#2-human-scene-fusion)
-    - [3. Human Activity Monitoring & Counting](#3-human-activity-monitoring--counting)
-    - [4. Interactive Scene Exploration](#4-interactive-scene-exploration)
-    - [5. Simulator Installation](#5-simulator-installation)
-  - [📊 HAPS 2.0 & HA-R2R Datasets (Data)](#-haps-20--ha-r2r-datasets-data)
-    - [1. Dataset Organization](#1-dataset-organization)
-    - [2. Dataset Download & Breakdown](#2-dataset-download--breakdown)
-    - [3. HAPS Dataset 2.0 (3D Human Motion Models)](#3-haps-dataset-20-3d-human-motion-models)
-    - [4. HA-R2R Dataset (Navigation Instructions)](#4-ha-r2r-dataset-navigation-instructions)
-    - [5. Human Activities Annotation Pipeline](#5-human-activities-annotation-pipeline)
-  - [🤖 HA-VLN-CMA Baseline Agent (agent)](#-ha-vln-cma-baseline-agent-agent)
-    - [1. Policy Architecture](#1-policy-architecture)
-    - [2. Agent Setup & Dependencies](#2-agent-setup--dependencies)
-    - [3. Training from Scratch](#3-training-from-scratch)
-    - [4. Evaluation & Validation](#4-evaluation--validation)
-    - [5. Test Inference & Submission](#5-test-inference--submission)
-  - [🤗 Hugging Face Hub](#-hugging-face-hub-fly1113ha-vln)
-  - [Contributing](#contributing)
-  - [Citation](#citation)
-  - [License](#license)
+- [🚀 Quick Start](#-quick-start)
+- [🎮 HA-VLN Simulator (HASimulator)](#-ha-vln-simulator-hasimulator)
+- [📊 HAPS 2.0 & HA-R2R Datasets (Data)](#-haps-20--ha-r2r-datasets-data)
+- [🤖 HA-VLN-CMA Baseline Agent (agent)](#-ha-vln-cma-baseline-agent-agent)
+- [🤗 Hugging Face Hub (fly1113/HA-VLN)](#-hugging-face-hub-fly1113ha-vln)
+- [Contributing](#contributing) · [Citation](#citation) · [License](#license)
 
 ---
 
