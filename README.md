@@ -136,9 +136,7 @@ docker run --gpus all -it --rm \
 
 The **HA-VLN Simulator** extends Habitat-Sim with dynamic 3D human motion simulation, real-time navigation mesh recomputation, multi-view human-scene fusion, social distance measurements, and interactive navigation tools.
 
-<div align="center">
-  <img src="demo/figs/simulator_draft_v2-1.png" alt="HA-VLN Simulator Architecture" width="700"/>
-</div>
+> 👉 *For complete simulator architecture diagrams, task configuration presets, and internal APIs, see [HASimulator/README.md](HASimulator/).*
 
 ### 1. Real-time Human Rendering
 
@@ -180,28 +178,7 @@ As detailed in Section 4 of the HA-VLN 2.0 paper, the simulator exposes unified 
 - **`human_counting`**: Detects and counts visible individuals within the agent's current egocentric observation using an open-set perception detector ([HASimulator/detector.py](HASimulator/detector.py)).
 - **Social Evaluation Metrics**: Implements benchmark evaluation metrics in [HASimulator/metric.py](HASimulator/metric.py), including **Total Collision Rate (TCR)**, **Collision Rate (CR)**, **Success Rate (SR)**, and **Navigation Error (NE)**.
 
-#### Task Configuration (`config/HAVLNCE_task.yaml`)
-
-To enable social distance measurements and human counting, configure [HASimulator/config/HAVLNCE_task.yaml](HASimulator/config/HAVLNCE_task.yaml):
-
-```yaml
-TASK:
-  MEASUREMENTS: [
-    DISTANCE_TO_GOAL,
-    SUCCESS,
-    SPL,
-    NDTW,
-    PATH_LENGTH,
-    ORACLE_SUCCESS,
-    STEPS_TAKEN,
-    COLLISIONS,
-    COLLISIONS_DETAIL,
-    DISTANCE_TO_HUMAN
-  ]
-
-SIMULATOR:
-  HUMAN_COUNTING: True
-```
+Enable social distance measurements under `TASK.MEASUREMENTS` and `SIMULATOR.HUMAN_COUNTING` in [HASimulator/config/HAVLNCE_task.yaml](HASimulator/config/HAVLNCE_task.yaml) (see [HASimulator/README.md](HASimulator/) for complete measurement lists and all 4 task configuration presets).
 
 <details>
 <summary><b>Setup GroundingDINO for Human Counting (Optional)</b></summary>
@@ -640,11 +617,7 @@ cd agent
 python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval
 ```
 
-Validation Benchmark Results:
-| Split | Score | SR | NE | CR | TCR |
-|:---|:---:|:---:|:---:|:---:|:---:|
-| `val_seen` | 15.47 | 0.165 | 6.230 | 0.638 | 13.271 |
-| `val_unseen` | 11.94 | 0.114 | 6.502 | 0.689 | 22.352 |
+*(For expected baseline metrics on val_seen and val_unseen splits, see [Expected Benchmark Validation Results](#expected-benchmark-validation-results).)*
 
 ### 5. Test Inference & Submission
 
