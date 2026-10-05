@@ -97,16 +97,18 @@ cd HA-VLN
 All scene meshes, human activities, and baseline checkpoints reside in `Data/`:
 
 ```bash
-# 1. 1-Click download validation episodes, HAPS 2.0, annotations, and CMA weights
+# 1. Download Matterport3D scene meshes into Data/scene_datasets
+# License required: https://niessner.github.io/Matterport/
+python download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
+
+# 2. 1-Click download validation episodes, HAPS 2.0, annotations, and CMA weights
 python scripts/download_hf.py --destination Data --target all
 
-# 2. Set up the released CMA baseline checkpoint
+# 3. Set up the released CMA baseline checkpoint
 mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
 cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth \
   agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
 ```
-
-> **Matterport3D Meshes**: Download scene meshes via the [official dataset page](https://niessner.github.io/Matterport/) (license required) and place extracted scans at `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
 
 ### 3. Reproduce Baseline with Docker
 
@@ -223,20 +225,13 @@ pip install -r requirements.txt
 
 ### 1. Matterport3D Scene Meshes (`Data/scene_datasets`)
 
-Request access through the [Matterport3D dataset page](https://niessner.github.io/Matterport/):
-fill and sign its Terms of Use form and send it to `matterport3d@googlegroups.com`.
-Use the download helper supplied after approval; we do not redistribute it.
-The locally verified helper uses Python 3 and offers a Habitat scene archive:
+To use the simulator, download the [Matterport3D dataset](https://niessner.github.io/Matterport/) (access approval required). Place the downloaded `download_mp.py` in your workspace and run:
 
 ```bash
-python3 /path/to/download_mp.py -o Data/scene_datasets --task_data habitat
-# Once task-data download finishes, press Ctrl-C at the prompt for the main dataset.
-unzip Data/scene_datasets/v1/tasks/mp3d_habitat.zip -d Data/scene_datasets
+python download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
 ```
 
-The final scene layout must be `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
-If the helper supplied to you is a legacy Python 2 version, use its required
-interpreter and check `--help` for its options.
+The final scene meshes should reside at `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
 
 ### 2. HA-VLN Simulation Assets & Annotations
 
