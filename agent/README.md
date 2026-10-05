@@ -8,40 +8,10 @@ This directory contains the baseline navigation policies, imitation learning tra
 
 The **Cross-Modal Attention (CMA)** agent (`CMAPolicy` in `VLN-CE/`) integrates multimodal observations with dynamic social-awareness constraints:
 
-```mermaid
-flowchart LR
-    subgraph Inputs ["Multimodal Inputs"]
-        RGB["RGB Observation"]
-        Depth["Depth Observation"]
-        Inst["Natural Language Instruction"]
-    end
-
-    subgraph Encoders ["Feature Encoders"]
-        ResNetRGB["ResNet-50 (RGB)"]
-        ResNetDepth["PointGoal ResNet-50 (Depth)"]
-        BiGRU["Bidirectional GRU / BERT"]
-    end
-
-    subgraph FusionEngine ["Cross-Modal Attention (CMA)"]
-        Attn["Cross-Modal Attention Layer"]
-        State["Recurrent State (GRU)"]
-        PM["Progress Monitor"]
-    end
-
-    subgraph Output ["Action Distribution"]
-        Action["Navigation Action Probabilities"]
-    end
-
-    RGB --> ResNetRGB
-    Depth --> ResNetDepth
-    Inst --> BiGRU
-    ResNetRGB --> Attn
-    ResNetDepth --> Attn
-    BiGRU --> Attn
-    Attn --> State
-    State --> PM
-    State --> Action
-```
+<div align="center">
+  <img src="../demo/figs/cma_architecture.png" alt="HA-VLN-CMA Policy Architecture" width="750"/>
+  <p><em>Figure: HA-VLN-CMA dual-stream policy architecture featuring ResNet-50 visual & depth encoders, BERT instruction embeddings, Cross-Modal Attention, and recurrent GRU action prediction (adapted from Paper Figure 13(b)).</em></p>
+</div>
 
 ### Mathematical Formulation
 
