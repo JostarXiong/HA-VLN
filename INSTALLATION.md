@@ -59,58 +59,31 @@ conda install -c aihabitat -c conda-forge \
 python -m pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 \
   --index-url https://download.pytorch.org/whl/cu118
 
-# 4. Clone and install Habitat-Lab v0.1.7
-git clone --branch v0.1.7 --depth 1 \
-  https://github.com/facebookresearch/habitat-lab.git habitat-lab
-python -m pip install -c requirements-py38.txt \
-  -r habitat-lab/requirements.txt setuptools pytest-runner \
-  tensorboard moviepy webdataset ifcfg msgpack_numpy
-python -m pip install --no-deps --no-build-isolation -e habitat-lab
+# 4. Install repository requirements
+python -m pip install -r requirements.txt
+python -m pip install -r agent/VLN-CE/requirements.txt
+python -m pip install -r agent/VLN-CE/habitat_baselines/rl/requirements.txt
 
-# 5. Install Agent & Simulator dependencies
-python -m pip install -r requirements-py38.txt
-
-# 6. Configure environment variables for headless rendering
-export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
-export DISPLAY=""
-export EGL_DEVICE_ID=0
-```
-
----
-
-## 3. Alternative: Build Habitat-Sim 0.1.7 from Source
-
-Use this **instead of** the pre-built conda package if you need to modify simulator C++ source code or headers:
-
-```bash
-# 1. Install build dependencies and headless OpenGL headers
-sudo apt-get update
-sudo apt-get install -y --no-install-recommends \
-  cmake build-essential libjpeg-dev libglm-dev libgl1 \
-  libegl1-mesa-dev mesa-utils xorg-dev freeglut3-dev
-
-# 2. Clone Habitat-Sim v0.1.7 recursively
-git clone --branch v0.1.7 --recursive \
-  https://github.com/facebookresearch/habitat-sim.git habitat-sim
-cd habitat-sim
-
-# 3. Build and install with headless EGL support
-python -m pip install -r requirements.txt -c "$HA_VLN_ROOT/requirements-py38.txt"
-python setup.py install --headless
+# 5. Install habitat and habitat_baselines in development mode
+cd agent/VLN-CE/habitat-lab
+python setup.py develop --all
 cd "$HA_VLN_ROOT"
 ```
 
 ---
 
-## 4. Legacy Native Conda Setup (Python 3.7 / CUDA 11.1)
+## 3. Legacy Python 3.7 Native Installation
 
-These commands retain the original software stack for historical reference. Please install `habitat-lab` (v0.1.7) and `habitat-sim` (v0.1.7) following [ETPNav](https://github.com/MarSaKi/ETPNav/):
+These commands retain the original software stack for historical reference. Please install `habitat-sim` before installing `habitat-lab`:
 
 ```bash
-conda create -n havlnce python=3.7 -y
-conda activate havlnce
-conda install -c aihabitat -c conda-forge habitat-sim=0.1.7 headless -y
+conda create -n havln-agent python=3.7 -y
+conda activate havln-agent
 
+# Install Habitat-Sim 0.1.7 (Headless)
+conda install -c aihabitat -c conda-forge habitat-sim=0.1.7=py3.7_linux_headless_da39a3ee5e6b4b0d3255bfef95601890afd80709 -y
+
+# Clone and install Habitat-Lab 0.1.7
 git clone --branch v0.1.7 https://github.com/facebookresearch/habitat-lab.git
 cd habitat-lab
 pip install -r requirements.txt
@@ -125,72 +98,93 @@ pip install -r requirements.txt
 
 ---
 
-## 5. GroundingDINO Setup for Human Counting (Optional)
+## 4. Optional Perception Module: GroundingDINO
 
-> **Note**: GroundingDINO is an optional simulator perception module for online open-set human detection, observation logging, and reward shaping ([HASimulator/detector.py](../HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do **not** require GroundingDINO.
-> By default, human counting is disabled (`HUMAN_COUNTING: False`), and the official Docker image does not pre-install GroundingDINO.
+*Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and human counting ([HASimulator/detector.py](HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
 
-### Setup for Python 3.8 / CUDA 11.8 (Recommended)
+### Installation for Python 3.8 Environment
 
 ```bash
 cd "$HA_VLN_ROOT"
-
-# 1. Install pinned Python dependencies
-python -m pip install -r requirements-dino-py38.txt
-
-# 2. Install compatible host compiler and CUDA toolkit via conda
 conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
   cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
 export CUDA_HOME="$CONDA_PREFIX"
 export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
 export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
+export PATH="$CUDA_HOME/bin:$PATH"
 
-# 3. Clone GroundingDINO at pinned revision and compile
 git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
 git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
 MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
   -e HASimulator/GroundingDINO
 
-# 4. Download pre-trained Swin-T detector weights
 mkdir -p HASimulator/GroundingDINO/weights
 curl -fL --retry 3 \
   https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
   -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
-
 python -m pip check
 ```
 
-### Setup for Legacy Python 3.7 / CUDA 11.1
+### Installation for Python 3.7 Environment
 
 ```bash
-# Requires system CUDA 11.1 toolkit and compatible gcc
-python -m pip install -r requirements-dino-py38.txt
-export CUDA_HOME=/usr/local/cuda
-
+cd "$HA_VLN_ROOT"
+python -m pip install "supervision==0.11.1" "addict==2.4.0" "yapf==0.40.2" "timm==0.9.12"
 git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
 git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
-pip install --no-deps --no-build-isolation -e HASimulator/GroundingDINO
+sed -i 's/supervision==[0-9.]*/supervision==0.11.1/' HASimulator/GroundingDINO/requirements.txt
+export CUDA_HOME=/usr/local/cuda
+python -m pip install --no-deps -e HASimulator/GroundingDINO
 
 mkdir -p HASimulator/GroundingDINO/weights
 curl -fL --retry 3 \
   https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
   -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
-```
-
-### Enabling in Task Configuration
-
-To activate human counting during evaluation, update [HASimulator/config/HAVLNCE_task.yaml](../HASimulator/config/HAVLNCE_task.yaml):
-
-```yaml
-SIMULATOR:
-  HUMAN_COUNTING: True
 ```
 
 ---
 
-## 6. Headless Rendering & Display Troubleshooting
+## 5. Building Headless Habitat-Sim from Source (C++ / EGL)
 
-When running without an X server (headless GPU servers or WSL2):
-1. **EGL Configuration**: Ensure `export EGL_DEVICE_ID=0` is set to match your primary GPU.
-2. **Empty DISPLAY**: Keep `export DISPLAY=""` so Habitat-Sim automatically binds to EGL rather than attempting GLX through an absent X11 server.
+If you require custom Habitat-Sim modifications or pre-built binaries fail on your distribution:
+
+```bash
+git clone --branch v0.1.7 https://github.com/facebookresearch/habitat-sim.git
+cd habitat-sim
+
+sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+  libjpeg-dev libglm-dev libgl1-mesa-glx libegl1-mesa-dev mesa-utils xorg-dev freeglut3-dev
+
+pip install -r requirements.txt
+python setup.py install --headless
+```
+
+---
+
+## 6. Verification & Troubleshooting
+
+Run the following sanity checks to verify that headless GPU rendering and PyTorch CUDA extensions operate properly:
+
+```bash
+# 1. Verify PyTorch CUDA availability
+python -c "import torch; assert torch.cuda.is_available(), 'CUDA not available'; print('PyTorch CUDA OK:', torch.cuda.get_device_name(0))"
+
+# 2. Verify Headless Habitat-Sim rendering
+python -c "import habitat_sim; print('Habitat-Sim version:', habitat_sim.__version__)"
+
+# 3. Test interactive scene demo
+cd scripts
+python demo.py --scan 1LXtFkjw3qL
+```
+
+### Common Issues
+
+1. **`libEGL.so.1: cannot open shared object file`**: Install Mesa headless runtime:
+   ```bash
+   sudo apt-get install -y libegl1-mesa libgl1-mesa-glx libgl1-mesa-dri
+   ```
+2. **`CUDA initialization error`**: Verify NVIDIA drivers and container runtime:
+   ```bash
+   nvidia-smi
+   ```
 3. **Library Path**: Make sure `$CONDA_PREFIX/lib` precedes system paths in `$LD_LIBRARY_PATH` so conda-forge's `libEGL.so` and `libGLX.so` are linked.

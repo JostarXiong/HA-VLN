@@ -1,68 +1,131 @@
-# HA-VLN-CE Agents
+# HA-VLN Baseline Agents (agent)
 
-Our agents adapt settings and codes from [VLN-CE](https://github.com/jacobkrantz/VLN-CE/). Check the [VLN-CE](VLN-CE) for more details.
-
-
-To implement the HA-VLN-CMA agent, you can use the following script:
-
-```bash
-# Training
-python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type train
-
-# Evaluation
-python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval
-
-# Inference
-python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type inference
-```
-
-### HA-VLN-VL Agent
-
-#### Model Structure
-In order to emphasize the impact of improving visual-language understanding on navigation performance, the model discards the A2C method in favor of simple imitation learning, retrained within the HA-VLN environment. Specifically, HA-VLN-VL adapts its model structure from [Recurrent VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT), with modifications to enhance visual-language understanding for navigation tasks. HA-VLN-VL leverages a BERT-like architecture to increase comprehension of complex instructions and resolve the misalignment between vision cues and navigation instructions (Challenge 2). The model can be defined as follows:
-
-$$
-s_t, p_t^a = \text{HA-VLN-VL}(s_{t-1}, X, V_t),
-$$
-
-where \( s_t \) is the state representation at time step \( t \), \( p_t^a \) denotes action probabilities, \( s_{t-1} \) is the previous state, \( X \) represents the language tokens of the instruction, and \( V_t \) are the visual tokens for the scene at time \( t \). HA-VLN-VL processes these inputs through a multi-layer Transformer, where the state token performs self-attention with other tokens to update its representation. The action probabilities are computed using the averaged attention weights of the final layer:
-
-$$
-p_t^a = \bar{\text{AveragePool}}_{s,v}^l,
-$$
-
-where it denotes the mean attention weights of the visual tokens relative to the state at the final layer \( l \).
-
-#### Training Setting
-HA-VLN-VL is trained in the HA-VLN environment. We initialize weights from Prevalent to leverage the prior knowledge obtained from large-scale pre-training. We followed the same training recipe as [Recurrent VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT).
+This directory contains the baseline navigation policies, imitation learning trainers, and evaluation harnesses for the **HA-VLN 2.0** continuous benchmark, adapting settings from [VLN-CE](https://github.com/jacobkrantz/VLN-CE/).
 
 ---
 
-### HA-VLN-CMA Agent
+## 1. HA-VLN-CMA Policy Architecture
 
-#### Model Structure
-Our HA-VLN-CMA agent employs a cross-modal attention architecture to process visual observations and language instructions jointly. This model integrates three core components. 
+The **Cross-Modal Attention (CMA)** agent (`CMAPolicy` in `VLN-CE/`) integrates multimodal observations with dynamic social-awareness constraints:
 
-First, the visual encoder processes RGB and depth inputs through a ResNet backbone, transforming each observation \( o_t \) at timestep \( t \) into a visual feature representation, denoted as:
+```mermaid
+flowchart LR
+    subgraph Inputs ["Multimodal Inputs"]
+        RGB["RGB Observation"]
+        Depth["Depth Observation"]
+        Inst["Natural Language Instruction"]
+    end
 
-$$
-v_t = \text{ResNet}(o_t).
-$$
+    subgraph Encoders ["Feature Encoders"]
+        ResNetRGB["ResNet-50 (RGB)"]
+        ResNetDepth["PointGoal ResNet-50 (Depth)"]
+        BiGRU["Bidirectional GRU / BERT"]
+    end
 
-Second, a BERT model serves as the language encoder, capturing the semantics of the navigation instructions \( I \) and generating language features:
+    subgraph FusionEngine ["Cross-Modal Attention (CMA)"]
+        Attn["Cross-Modal Attention Layer"]
+        State["Recurrent State (GRU)"]
+        PM["Progress Monitor"]
+    end
 
-$$
-l = \text{BERT}(I).
-$$
+    subgraph Output ["Action Distribution"]
+        Action["Navigation Action Probabilities"]
+    end
 
-Finally, a cross-modal fusion module aligns the visual and language features using a multi-head attention mechanism, yielding the fused features:
+    RGB --> ResNetRGB
+    Depth --> ResNetDepth
+    Inst --> BiGRU
+    ResNetRGB --> Attn
+    ResNetDepth --> Attn
+    BiGRU --> Attn
+    Attn --> State
+    State --> PM
+    State --> Action
+```
 
-$$
-f_t = \text{MultiHeadAttention}(v_t, l).
-$$
+### Mathematical Formulation
 
-At each timestep \( t \), the model computes an action distribution \( P(a_t | f_t) \) over possible actions \( a_t \), defined by:
+1. **Visual Encoders**:
+   - The RGB stream extracts spatial feature maps using a ResNet-50 backbone:
+     $$v_t^{\text{rgb}} = \text{ResNet}(o_t^{\text{rgb}})$$
+   - The depth stream extracts geometric scene structure using a frozen PointGoal navigation ResNet-50:
+     $$v_t^{\text{depth}} = \text{ResNet}_{\text{PointGoal}}(o_t^{\text{depth}})$$
+2. **Language Encoder**:
+   - Instruction tokens $I = \{w_1, \ldots, w_L\}$ are encoded into contextual embeddings:
+     $$l = \text{BiGRU}(I)$$
+3. **Cross-Modal Fusion**:
+   - A multi-head attention module aligns visual observations $v_t$ and language features $l$:
+     $$f_t = \text{MultiHeadAttention}(v_t, l)$$
+4. **Action Distribution**:
+   - At each timestep $t$, an MLP predicts action probabilities over navigation primitives (Move Forward, Turn Left, Turn Right, Stop):
+     $$P(a_t \mid f_t) = \text{Softmax}(\text{MLP}_{\text{action}}(f_t))$$
+5. **Progress Monitor**:
+   - A linear projection regularizes recurrent state representations by predicting normalized remaining geodesic distance to the goal:
+     $$y_t = \sigma(\mathbf{w}_{\text{pm}}^\top h_t + b_{\text{pm}}) \in [0, 1]$$
 
-$$
-P(a_t | f_t) = \text{Softmax}(\text{MLP}_{\text{action}}(f_t)).
-$$
+---
+
+## 2. Training with DAgger
+
+To train the HA-VLN-CMA policy from scratch using DAgger imitation learning:
+
+```bash
+# Ensure environment is active (Conda or Docker)
+python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type train
+```
+
+Checkpoints are automatically stored under `VLN-CE/data/checkpoints/cma_pm_da_aug_tune/`.
+
+---
+
+## 3. Evaluation & Published Benchmark Results
+
+To evaluate the released pre-trained CMA policy on the validation splits:
+
+```bash
+# 1. Evaluate on val_unseen (primary benchmark split)
+python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval \
+  MODEL.DEPTH_ENCODER.ddppo_checkpoint NONE VIDEO_OPTION "[]"
+
+# 2. Evaluate on val_seen
+python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval \
+  EVAL.SPLIT val_seen \
+  MODEL.DEPTH_ENCODER.ddppo_checkpoint NONE VIDEO_OPTION "[]"
+```
+
+> **Note on `ddppo_checkpoint NONE`**: The released `ckpt.39.pth` checkpoint already contains pre-trained depth encoder weights; passing `ddppo_checkpoint NONE` bypasses redundant local PointGoal weight searches.
+
+### Published Baseline Metrics
+
+The following metrics reflect the published HA-VLN 2.0 evaluation results:
+
+| Split | Success Rate (SR) ↑ | Navigation Error (NE, m) ↓ | Collision Rate (CR) ↓ | Total Collision Rate (TCR) ↓ |
+|:---|:---:|:---:|:---:|:---:|
+| `val_seen` | 0.165 | 6.230 | 0.638 | 13.271 |
+| `val_unseen` | 0.114 | 6.502 | 0.689 | 22.352 |
+
+---
+
+## 4. Test Set Inference & Challenge Submission
+
+To run inference on the held-out test split and export trajectories:
+
+```bash
+python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type inference \
+  MODEL.DEPTH_ENCODER.ddppo_checkpoint NONE VIDEO_OPTION "[]"
+```
+
+The resulting trajectory file is generated under `VLN-CE/data/checkpoints/cma_pm_da_aug_tune/evals/`. Refer to the [RoboWorld 2026 Participant Toolkit](https://github.com/F1y1113/havln-challenge) for official action replay, trajectory packaging, and leaderboard ranking.
+
+---
+
+## 5. HA-VLN-VL Model Overview (Paper Study)
+
+> [!NOTE]
+> **Implementation Scope Note**: The HA-VLN paper investigates both **HA-VLN-CMA** and **HA-VLN-VL** ([Recurrent VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT) adaptation). In this repository, **HA-VLN-CMA** is the officially released, runnable, and benchmarked baseline (with full codebase in `agent/` and released checkpoint `ckpt.39.pth`). HA-VLN-VL is described in the paper as an exploratory study and its model code is not part of this release.
+
+In addition to CMA, the paper investigates **HA-VLN-VL**, adapting Recurrent VLN-BERT to resolve misalignment between visual cues and navigation instructions:
+
+$$s_t, p_t^a = \text{HA-VLN-VL}(s_{t-1}, X, V_t)$$
+
+where $s_t$ represents the recurrent state, $p_t^a$ denotes predicted action probabilities, $X$ contains instruction language tokens, and $V_t$ denotes egocentric visual tokens. HA-VLN-VL processes multimodal inputs via multi-layer Transformer self-attention.

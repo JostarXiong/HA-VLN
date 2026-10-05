@@ -172,7 +172,7 @@ docker run --gpus all -it --rm \
   "$IMAGE" python demo.py --scan 1LXtFkjw3qL
 ```
 
-> 💡 *Need a native Conda environment or C++ source build? Check the comprehensive [Environment Installation Guide](docs/installation.md).*
+> 💡 *Need a native Conda environment or C++ source build? Check the comprehensive [Environment Installation Guide](INSTALLATION.md).*
 
 ---
 
@@ -185,20 +185,20 @@ Extends Habitat-Sim with dynamic 3D human motion simulation, multi-threaded rend
 - **Dynamic Human Rendering**: Real-time insertion and animation of dynamic human meshes in class `HAVLNCE`.
 - **Social Distance APIs**: Exposes `distance_to_human`, `collisions_detail`, and `human_counting`.
 - **Quality Verification**: Multi-view 9-camera human-scene fusion pipeline (`scripts/human_scene_fusion.py`).
-- 👉 *Read more in the [Simulator Architecture & API Manual](docs/simulator.md).*
+- 👉 *Read more in the [Simulator Architecture & API Manual](HASimulator/README.md).*
 
 ### 📊 HAPS 2.0 & HA-R2R Datasets (`Data/`)
 Provides simulation assets, motion models, and language instructions stored in `Data/`:
 - **HAPS 2.0**: 486 dynamic 3D human motion SMPL models across 172 activities and 26 architectural regions.
 - **HA-R2R**: 16,844 socially grounded instructions capturing human interactions, crowd encounters, and etiquette.
 - **Multi-Human Annotations**: Trajectory metadata (`human_motion.json`) generated via coarse PSO and fine multi-camera tracking.
-- 👉 *Read more in the [Datasets & Annotation Pipeline Specification](docs/datasets.md).*
+- 👉 *Read more in the [Datasets & Annotation Pipeline Specification](Data/README.md).*
 
 ### 🤖 Baseline Agents (`agent/`)
 Provides baseline navigation policies for continuous embodied navigation:
 - **HA-VLN-CMA**: Cross-Modal Attention policy integrating RGB-D visual observations, bidirectional GRU language encoding, and goal progress monitoring.
 - **Training & Evaluation**: DAgger imitation learning workflows and evaluation harnesses in `agent/VLN-CE/`.
-- 👉 *Read more in the [Baseline Agents & Training Manual](docs/agents.md).*
+- 👉 *Read more in the [Baseline Agents & Training Manual](agent/README.md).*
 
 ---
 
@@ -208,10 +208,10 @@ For in-depth technical documentation, refer to our dedicated guides:
 
 | Document | Topic & Content |
 |:---|:---|
-| **[Environment Setup Guide](docs/installation.md)** | Docker deployment, Native Conda (Python 3.8 / 3.7), Habitat-Sim C++ build, and GroundingDINO setup. |
-| **[Simulator Architecture & APIs](docs/simulator.md)** | System architecture diagram, threading model, dynamic NavMesh caching, APIs, and task configs. |
-| **[Datasets & Annotation Pipeline](docs/datasets.md)** | HAPS 2.0 SMPL math, HA-R2R dataset details, few-shot prompt templates, and 3-stage annotation. |
-| **[Agents & Training Manual](docs/agents.md)** | CMA policy math, DAgger training from scratch, checkpoint usage, evaluation, and challenge submissions. |
+| **[Environment Installation Guide](INSTALLATION.md)** | Docker deployment, Native Conda (Python 3.8 / 3.7), Habitat-Sim C++ build, and GroundingDINO setup. |
+| **[Simulator Architecture & APIs](HASimulator/README.md)** | Simulator architecture, real-time human rendering, NavMesh caching, APIs, and task configs. |
+| **[Datasets & Annotation Pipeline](Data/README.md)** | HAPS 2.0 SMPL math, HA-R2R dataset details, few-shot prompt templates, and 3-stage annotation. |
+| **[Baseline Agents & Training Manual](agent/README.md)** | CMA policy architecture, DAgger imitation training, validation commands, and paper comparison. |
 
 ---
 
