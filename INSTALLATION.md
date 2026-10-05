@@ -1,13 +1,15 @@
 # Environment Setup & Installation Guide
 
 This guide provides comprehensive instructions for deploying the **HA-VLN 2.0** environment:
-- **[1. Docker Environment (Recommended)](#1-docker-environment-recommended)**: Zero-configuration deployment with pre-built Habitat-Sim and CUDA runtime.
-- **[2. Native Conda Installation (Python 3.8 / CUDA 11.8)](#2-native-conda-installation-python-38--cuda-118)**: Alternative local environment if you prefer not to use Docker.
-- **[3. Dataset Acquisition](#3-dataset-acquisition)**: Setting up Matterport3D meshes and Hugging Face assets.
-- **[4. Verification & Troubleshooting](#4-verification--troubleshooting)**: Headless rendering sanity checks and common fixes.
+- **[1. Docker Environment (Recommended)](#docker-environment)**: Zero-configuration deployment with pre-built Habitat-Sim and CUDA runtime.
+- **[2. Native Conda Installation (Python 3.8 / CUDA 11.8)](#native-conda-installation)**: Alternative local environment if you prefer not to use Docker.
+- **[3. Dataset Acquisition](#dataset-acquisition)**: Setting up Matterport3D meshes and Hugging Face assets.
+- **[4. Verification & Troubleshooting](#verification-troubleshooting)**: Headless rendering sanity checks and common fixes.
 
 ---
 
+<a id="docker-environment"></a>
+<a id="1-docker-environment-recommended"></a>
 ## 1. Docker Environment (Recommended)
 
 Our official Docker image pre-configures CUDA 11.8, PyTorch 2.0.1, Habitat-Sim 0.1.7, Habitat-Lab 0.1.7, and headless graphics drivers (`libEGL`, `libGLX`), enabling out-of-the-box execution across Linux and WSL2 without host driver conflicts.
@@ -33,38 +35,52 @@ docker run --gpus all -it --rm \
   "$IMAGE" bash
 ```
 
+> [!IMPORTANT]
+> **Initialize CMA Dependencies**: Once inside the running interactive container, you must run `setup_docker_cma.sh` to install CMA dependencies and link `habitat_baselines` before executing any training or evaluation commands from [agent/README.md](agent/README.md).
+
+```bash
+# Inside the running container:
+bash scripts/setup_docker_cma.sh
+```
+
 ### Key Docker Flags Explained
 
 - `--gpus all`: Grants container access to host NVIDIA GPUs for hardware-accelerated headless EGL rendering.
 - `--shm-size 16g`: Allocates shared memory for PyTorch multi-worker dataloading and inter-process communication.
 - `--mount type=bind,...`: Dual-mounts host `Data/` to both `/workspace/HA-VLN/Data` and `/data/havln2`, satisfying both legacy and current configuration paths without manual editing.
 
+<a id="optional-setup-groundingdino-inside-docker-container"></a>
 <details>
 <summary><b>Optional: Setup GroundingDINO inside Docker Container</b></summary>
 <br>
 
 *Note: GroundingDINO is only required if you explicitly enable online human detection and counting (`TASK_CONFIG.SIMULATOR.HUMAN_COUNTING: True`). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
 
-Inside the running Docker container, compile GroundingDINO with the container's CUDA 11.8 toolchain:
+Inside the running Docker container, install Git and build dependencies, then compile GroundingDINO with the container's CUDA 11.8 toolchain:
 
 ```bash
 source /opt/conda/etc/profile.d/conda.sh
 conda activate havlnce
 cd /workspace/HA-VLN
 
-# Install CUDA development toolkit inside container
+# 1. Install git and CUDA development toolkit inside container
+apt-get update && apt-get install -y --no-install-recommends git
 conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
   cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
 export CUDA_HOME="$CONDA_PREFIX"
 export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
 export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
+export PATH="$CUDA_HOME/bin:$PATH"
 
-# Clone and build GroundingDINO
+# 2. Install GroundingDINO perception dependencies (transformers, timm, etc.)
+python -m pip install -r requirements-dino-py38.txt
+
+# 3. Clone and build GroundingDINO
 git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
 git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
 MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation -e HASimulator/GroundingDINO
 
-# Download pre-trained weights
+# 4. Download pre-trained weights
 mkdir -p HASimulator/GroundingDINO/weights
 curl -fL --retry 3 \
   https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
@@ -76,6 +92,9 @@ python -m pip check
 
 ---
 
+<a id="native-conda-installation"></a>
+<a id="2-native-conda-installation-python-38--cuda-118"></a>
+<a id="2-native-conda-installation-python-38-cuda-118"></a>
 ## 2. Native Conda Installation (Python 3.8 / CUDA 11.8)
 
 > [!NOTE]
@@ -103,15 +122,15 @@ conda install -c aihabitat -c conda-forge \
 python -m pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 \
   --index-url https://download.pytorch.org/whl/cu118
 
-# 4. Install repository requirements
-python -m pip install -r requirements.txt
-python -m pip install -r agent/VLN-CE/requirements.txt
-python -m pip install -r agent/VLN-CE/habitat_baselines/rl/requirements.txt
-
-# 5. Install habitat and habitat_baselines in development mode
-cd agent/VLN-CE/habitat-lab
+# 4. Clone and install Habitat-Lab 0.1.7 in development mode
+git clone --branch v0.1.7 https://github.com/facebookresearch/habitat-lab.git
+cd habitat-lab
 python setup.py develop --all
 cd "$HA_VLN_ROOT"
+
+# 5. Install Python 3.8 compatibility requirements (preserves torch 2.0.1 / torchvision 0.15.2)
+python -m pip install -r requirements-py38.txt \
+  --extra-index-url https://download.pytorch.org/whl/cu118
 ```
 
 <details>
@@ -133,6 +152,8 @@ python setup.py install --headless
 
 </details>
 
+<a id="setup-groundingdino-for-human-counting-optional"></a>
+<a id="setup-groundingdino-native"></a>
 <details>
 <summary><b>Setup GroundingDINO for Human Counting (Optional)</b></summary>
 <br>
@@ -147,6 +168,9 @@ export CUDA_HOME="$CONDA_PREFIX"
 export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
 export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
 export PATH="$CUDA_HOME/bin:$PATH"
+
+# Install GroundingDINO perception dependencies
+python -m pip install -r requirements-dino-py38.txt
 
 git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
 git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
@@ -193,8 +217,10 @@ pip install -r requirements.txt
 <br>
 
 ```bash
+HA_VLN_ROOT="${HA_VLN_ROOT:-$(pwd)}"
 cd "$HA_VLN_ROOT"
-python -m pip install "supervision==0.11.1" "addict==2.4.0" "yapf==0.40.2" "timm==0.9.12"
+python -m pip install "supervision==0.11.1" "addict==2.4.0" "yapf==0.40.2" "timm==0.9.12" \
+  "transformers==4.30.2" "tokenizers==0.13.3" "huggingface-hub==0.16.4" "safetensors==0.3.1" "pycocotools" "ninja"
 git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
 git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
 sed -i 's/supervision==[0-9.]*/supervision==0.11.1/' HASimulator/GroundingDINO/requirements.txt
@@ -215,6 +241,8 @@ curl -fL --retry 3 \
 
 ---
 
+<a id="dataset-acquisition"></a>
+<a id="3-dataset-acquisition"></a>
 ## 3. Dataset Acquisition
 
 All scene meshes, human activities, and baseline checkpoints reside in `Data/`.
@@ -233,9 +261,9 @@ Scene meshes must reside at `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
 
 ### HA-VLN Simulation Assets & Annotations
 
-All navigation episodes, HAPS 2.0 motion meshes, multi-human annotations, and pretrained weights are officially hosted on [**Hugging Face (fly1113/HA-VLN)**](https://huggingface.co/datasets/fly1113/HA-VLN).
+Large simulation assets (HAPS 2.0 dynamic human motion meshes, HA-R2R navigation episodes, and CMA baseline weights) are officially hosted on [**Hugging Face (fly1113/HA-VLN)**](https://huggingface.co/datasets/fly1113/HA-VLN). Multi-human placement metadata (`human_motion.json`) and collision evaluation baselines are fetched from the pinned GitHub release.
 
-Use the included helper script to download and extract all validation episodes, HAPS 2.0 motions, annotations, and CMA baseline weights in one command:
+The included downloader script automatically orchestrates and verifies downloads from both sources with SHA-256 integrity checks:
 
 ```bash
 python scripts/download_hf.py --destination Data --target all
@@ -263,6 +291,9 @@ bash scripts/download_data.sh
 
 ---
 
+<a id="verification-troubleshooting"></a>
+<a id="4-verification-troubleshooting"></a>
+<a id="4-verification--troubleshooting"></a>
 ## 4. Verification & Troubleshooting
 
 Run the following sanity checks to verify that headless GPU rendering and PyTorch CUDA extensions operate properly:
@@ -274,9 +305,12 @@ python -c "import torch; assert torch.cuda.is_available(), 'CUDA not available';
 # 2. Verify Headless Habitat-Sim rendering
 python -c "import habitat_sim; print('Habitat-Sim version:', habitat_sim.__version__)"
 
-# 3. Test interactive scene demo
-cd scripts
-python demo.py --scan 1LXtFkjw3qL
+# 3. Test scene rendering & dynamic humans
+# Headless verification (renders and saves a verification frame to scripts/test/demo_frame.png):
+python scripts/demo.py --scan 1LXtFkjw3qL --headless
+
+# Interactive keyboard control (W/A/D/Q; requires an active GUI display session or forwarded DISPLAY):
+python scripts/demo.py --scan 1LXtFkjw3qL
 ```
 
 ### Common Issues

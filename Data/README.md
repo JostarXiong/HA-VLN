@@ -1,8 +1,6 @@
 # HA-VLN Datasets (Data)
 
-This directory houses the simulation assets, 3D motion models, navigation instructions, and baseline weights for the **HA-VLN 2.0** benchmark.
-
-All dataset episodes, HAPS 2.0 motions, annotations, and pretrained models are officially hosted on Hugging Face:
+Large simulation assets (HAPS 2.0 dynamic human motion models, HA-R2R navigation episodes, and CMA baseline checkpoints) are officially hosted on Hugging Face, while multi-human placement annotations (`human_motion.json`) and collision evaluation baselines are fetched from the pinned GitHub repository:
 - 🚀 [**Hugging Face Dataset (fly1113/HA-VLN)**](https://huggingface.co/datasets/fly1113/HA-VLN)
 
 > 💡 *For step-by-step dataset acquisition instructions, refer to the [Installation Guide](../INSTALLATION.md#3-dataset-acquisition).*

@@ -87,7 +87,7 @@ TASK:
 
 Online human detection and counting relies on GroundingDINO:
 1. Set `HUMAN_COUNTING: True` under `SIMULATOR` in [`config/HAVLNCE_task.yaml`](config/HAVLNCE_task.yaml).
-2. Install GroundingDINO and download pre-trained weights by following the instructions in [INSTALLATION.md](../INSTALLATION.md#optional-setup-groundingdino-inside-docker-container).
+2. Install GroundingDINO and download pre-trained weights by following the setup guide in [INSTALLATION.md (Docker)](../INSTALLATION.md#optional-setup-groundingdino-inside-docker-container) or [INSTALLATION.md (Native Conda)](../INSTALLATION.md#setup-groundingdino-native).
 
 ---
 
@@ -97,7 +97,7 @@ The evaluation protocol integrates standard navigation performance with social c
 
 1. **Success Rate (SR, $\uparrow$)**: Proportion of episodes where the agent successfully stops within the goal radius ($d_{\text{stop}} \le 3.0\text{m}$) without human collision:
    $$\text{SR} = \frac{1}{N} \sum_{i=1}^N \mathbb{I}(d_i \le 3.0) \cdot \mathbb{I}(e_i = 0)$$
-2. **Navigation Error (NE, $\text{m}, \downarrow$)**: Mean geodesic distance between the agent's final stopping position and the goal target:
+2. **Navigation Error (NE, $\text{m}, \downarrow$)**: Mean Euclidean distance between the agent's final stopping position and the goal target:
    $$\text{NE} = \frac{1}{N} \sum_{i=1}^N d_i$$
 3. **Collision Rate (CR, $\downarrow$)**: Proportion of human-influenced episodes containing at least one adjusted dynamic human collision:
    $$\text{CR} = \frac{1}{\beta N} \sum_{i=1}^N \min(e_i, 1)$$

@@ -75,16 +75,18 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 
 ## Table of Contents
 
-- [🚀 Quick Start](#-quick-start)
-- [🏛️ Framework Architecture](#-framework-architecture)
-  - [🖥️ HA-VLN Simulator (`HASimulator/`)](#-ha-vln-simulator-hasimulator)
-  - [📊 HAPS 2.0 & HA-R2R Datasets (`Data/`)](#-haps-20--ha-r2r-datasets-data)
-  - [🤖 Baseline Agents (`agent/`)](#-baseline-agents-agent)
-- [📚 Documentation Guide](#-documentation-guide)
+- [🚀 Quick Start](#quick-start)
+- [🏛️ Framework Architecture](#framework-architecture)
+  - [🖥️ HA-VLN Simulator (`HASimulator/`)](#ha-vln-simulator-hasimulator)
+  - [📊 HAPS 2.0 & HA-R2R Datasets (`Data/`)](#haps-20--ha-r2r-datasets-data)
+  - [🤖 Baseline Agents (`agent/`)](#baseline-agents-agent)
+- [📚 Documentation Guide](#documentation-guide)
 - [Contributing](#contributing) · [Citation](#citation) · [License](#license)
 
 ---
 
+<a id="quick-start"></a>
+<a id="-quick-start"></a>
 ## 🚀 Quick Start
 
 In this section, you will download the necessary datasets, set up the Docker environment, reproduce the **HA-VLN-CMA** baseline, and explore the simulator interactively.
@@ -150,19 +152,31 @@ The following baseline metrics reflect the published HA-VLN 2.0 evaluation resul
 | `val_seen` | 0.165 | 6.230 | 0.638 | 13.271 |
 | `val_unseen` | 0.114 | 6.502 | 0.689 | 22.352 |
 
-### 4. Interactive Scene Exploration
+### 4. Interactive Scene Exploration & Headless Verification
 
-Experience the human-populated simulator yourself by navigating interactively using the keyboard:
+Experience the human-populated simulator yourself by navigating interactively using keyboard controls, or run in headless verification mode:
 
 | Key | Action |
 |:---:|:---|
 | **W** | Move forward ($0.25\text{m}$) |
 | **A** | Turn left ($15^{\circ}$) |
 | **D** | Turn right ($15^{\circ}$) |
+| **Q** | Quit |
 
 ```bash
+# 1. Headless verification (validates rendering and dynamic humans; outputs test frame to scripts/test/demo_frame.png)
 docker run --gpus all -it --rm \
   --shm-size 16g \
+  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
+  --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
+  --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
+  --workdir /workspace/HA-VLN/scripts \
+  "$IMAGE" python demo.py --scan 1LXtFkjw3qL --headless
+
+# 2. Interactive GUI window (requires an active host X11 display forwarded into Docker)
+docker run --gpus all -it --rm \
+  --shm-size 16g \
+  -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
   --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
   --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
   --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
@@ -174,10 +188,14 @@ docker run --gpus all -it --rm \
 
 ---
 
+<a id="framework-architecture"></a>
+<a id="-framework-architecture"></a>
 ## 🏛️ Framework Architecture
 
 The HA-VLN 2.0 framework is organized into three core modules:
 
+<a id="ha-vln-simulator-hasimulator"></a>
+<a id="-ha-vln-simulator-hasimulator"></a>
 ### 🖥️ HA-VLN Simulator (`HASimulator/`)
 Extends Habitat-Sim with dynamic 3D human motion simulation, multi-threaded rendering, and real-time navigation mesh recomputation.
 - **Dynamic Human Rendering**: Real-time insertion and animation of dynamic human meshes in class `HAVLNCE`.
@@ -185,6 +203,8 @@ Extends Habitat-Sim with dynamic 3D human motion simulation, multi-threaded rend
 - **Quality Verification**: Multi-view 9-camera human-scene fusion pipeline (`scripts/human_scene_fusion.py`).
 - 👉 *Read more in the [Simulator Architecture & API Manual](HASimulator/README.md).*
 
+<a id="haps-20--ha-r2r-datasets-data"></a>
+<a id="-haps-20--ha-r2r-datasets-data"></a>
 ### 📊 HAPS 2.0 & HA-R2R Datasets (`Data/`)
 Provides simulation assets, motion models, and language instructions stored in `Data/`:
 - **HAPS 2.0**: 486 dynamic 3D human motion SMPL models across 172 activities and 26 architectural regions.
@@ -192,6 +212,8 @@ Provides simulation assets, motion models, and language instructions stored in `
 - **Multi-Human Annotations**: Trajectory metadata (`human_motion.json`) generated via coarse PSO and fine multi-camera tracking.
 - 👉 *Read more in the [Datasets & Annotation Pipeline Specification](Data/README.md).*
 
+<a id="baseline-agents-agent"></a>
+<a id="-baseline-agents-agent"></a>
 ### 🤖 Baseline Agents (`agent/`)
 Provides baseline navigation policies for continuous embodied navigation:
 - **HA-VLN-CMA**: Cross-Modal Attention policy integrating RGB-D visual observations, bidirectional GRU language encoding, and goal progress monitoring.
@@ -200,6 +222,8 @@ Provides baseline navigation policies for continuous embodied navigation:
 
 ---
 
+<a id="documentation-guide"></a>
+<a id="-documentation-guide"></a>
 ## 📚 Documentation Guide
 
 For in-depth technical documentation, refer to our dedicated guides:

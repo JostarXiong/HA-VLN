@@ -12,7 +12,17 @@ import re
 
 # --- Configuration ---
 
-DATA_PATH = "/home/qw/proj/HA-VLN/Data/" 
+def get_default_data_path():
+    """Resolve data root directory from argument, environment, or relative path."""
+    if os.environ.get("HA_VLN_DATA_DIR") and os.path.exists(os.environ["HA_VLN_DATA_DIR"]):
+        return os.path.abspath(os.environ["HA_VLN_DATA_DIR"])
+    if os.path.exists("/data/havln2"):
+        return "/data/havln2"
+    # Default to repo_root/Data
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(repo_root, "Data")
+
+DATA_PATH = get_default_data_path()
 SCENE_DATASETS_PATH = os.path.join(DATA_PATH, "scene_datasets/mp3d")
 HAPS_DATA_PATH = os.path.join(DATA_PATH, "HAPS2_0")
 HUMAN_ANNOTATIONS_PATH = os.path.join(DATA_PATH, "Multi-Human-Annotations/human_motion.json")
@@ -83,11 +93,12 @@ def make_sim_configuration(scene_id):
 
 # --- Human Management Class (based on Paper Alg A2 ) ---
 class HumanManager:
-    def __init__(self, sim, human_data, target_scan_id, frame_interval=1/25.0):
+    def __init__(self, sim, human_data, target_scan_id, frame_interval=1/25.0, haps_data_path=None):
         self.sim = sim
         self.human_data = human_data
         self.target_scan_id = target_scan_id
         self.frame_interval = frame_interval # Time between frames (e.g., 1/25 for 25 FPS)
+        self.haps_data_path = haps_data_path or HAPS_DATA_PATH
 
         self.humans = [] # Stores info about active humans
         self.human_render_objects = {} # Maps human_point_id to current sim object ID
@@ -130,7 +141,7 @@ class HumanManager:
 
                 if not translations or not rotations: continue
 
-                glb_folder_path = os.path.join(HAPS_DATA_PATH, f"{category}_{index}")
+                glb_folder_path = os.path.join(self.haps_data_path, f"{category}_{index}")
                 glb_files = load_glb_files(glb_folder_path)
 
                 if not glb_files:
@@ -285,20 +296,35 @@ class HumanManager:
 
 # --- Main Interactive Loop ---
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="HA-VLN interactive scene exploration and headless verification demo")
     parser.add_argument(
-        "--scan", type=str, default="1LXtFkjw3qL", help="Scan ID to load (e.g., '17DRP5sb8fy')"
+        "--scan", type=str, default="1LXtFkjw3qL", help="Scan ID to load (e.g., '1LXtFkjw3qL')"
     )
     parser.add_argument(
         "--scene-file", type=str, default=None, help="Optional: Path to the specific .glb scene file. Overrides default path construction."
     )
+    parser.add_argument(
+        "--data-dir", type=str, default=None, help="Root directory containing Data (e.g. /workspace/HA-VLN/Data or Data/)"
+    )
+    parser.add_argument(
+        "--headless", action="store_true", help="Run in headless verification mode without opening a GUI window"
+    )
+    parser.add_argument(
+        "--output-frame", type=str, default="scripts/test/demo_frame.png", help="Path to save verification frame in headless mode"
+    )
     args = parser.parse_args()
 
-    # --- 1. Load Scene ---
+    # --- 1. Resolve Data Paths ---
+    data_root = args.data_dir or DATA_PATH
+    scene_datasets_path = os.path.join(data_root, "scene_datasets/mp3d")
+    haps_data_path = os.path.join(data_root, "HAPS2_0")
+    human_annotations_path = os.path.join(data_root, "Multi-Human-Annotations/human_motion.json")
+
+    # --- 2. Load Scene ---
     if args.scene_file:
         scene_filepath = args.scene_file
     else:
-        scene_filepath = os.path.join(SCENE_DATASETS_PATH, args.scan, f"{args.scan}.glb")
+        scene_filepath = os.path.join(scene_datasets_path, args.scan, f"{args.scan}.glb")
 
     print(f"Loading scene: {scene_filepath}")
     sim_cfg = make_sim_configuration(scene_filepath)
@@ -310,31 +336,60 @@ def main():
 
     # Initialize agent position (optional, place it somewhere reasonable)
     initial_state = sim.get_agent(0).get_state()
-    # Try getting a navigable point, otherwise use default
     start_pos = sim.pathfinder.get_random_navigable_point()
     initial_state.position = start_pos
     sim.get_agent(0).set_state(initial_state)
     print(f"Agent starting at: {initial_state.position}")
 
-
-    # --- 2. Load Human Data ---
+    # --- 3. Load Human Data ---
     try:
-        with open(HUMAN_ANNOTATIONS_PATH, 'r') as f:
+        with open(human_annotations_path, 'r') as f:
             all_human_data = json.load(f)
     except FileNotFoundError:
-        print(f"Error: Human annotations file not found at {HUMAN_ANNOTATIONS_PATH}")
+        print(f"Error: Human annotations file not found at {human_annotations_path}")
         sim.close()
         return
     except json.JSONDecodeError:
-         print(f"Error: Could not parse human annotations file at {HUMAN_ANNOTATIONS_PATH}")
-         sim.close()
-         return
+        print(f"Error: Could not parse human annotations file at {human_annotations_path}")
+        sim.close()
+        return
 
-    # --- 3. Initialize Human Manager ---
-    human_manager = HumanManager(sim, all_human_data, args.scan)
-    human_manager.start_updates() # Start the background thread
+    # --- 4. Initialize Human Manager ---
+    human_manager = HumanManager(sim, all_human_data, args.scan, haps_data_path=haps_data_path)
+    human_manager.start_updates()
 
-    # --- 4. Interactive Control ---
+    # --- 5. Display / Verification Handling ---
+    has_display = bool(os.environ.get("DISPLAY")) and not args.headless
+    if has_display:
+        try:
+            cv2.namedWindow("HA-VLN Interactive", cv2.WINDOW_NORMAL)
+        except Exception as e:
+            print(f"Notice: Could not initialize OpenCV GUI window ({e}). Running in headless verification mode.")
+            has_display = False
+
+    if not has_display:
+        print("\n--- Headless Verification Mode ---")
+        print("Stepping simulator physics and dynamic human animations...")
+        human_manager.update_humans()
+        sim.step_physics(1.0 / 60.0)
+        obs = sim.get_sensor_observations()
+        rgb_img = obs.get("color_sensor")
+        if rgb_img is not None:
+            output_dir = os.path.dirname(os.path.abspath(args.output_frame))
+            os.makedirs(output_dir, exist_ok=True)
+            bgr_img = cv2.cvtColor(rgb_img[..., :3], cv2.COLOR_RGB2BGR)
+            cv2.imwrite(args.output_frame, bgr_img)
+            print(f"Verification frame successfully rendered and saved to: {args.output_frame}")
+        else:
+            print("Warning: Could not retrieve color sensor observation.")
+        print("Cleaning up simulator and background worker threads...")
+        human_manager.stop_updates()
+        human_manager.cleanup_humans()
+        sim.close()
+        print("Headless verification completed successfully.")
+        return
+
+    # --- 6. Interactive Keyboard Control Loop ---
     print("\n--- Interactive Controls ---")
     print("  W: Move Forward")
     print("  A: Turn Left")
@@ -342,51 +397,36 @@ def main():
     print("  Q: Quit")
     print("---------------------------\n")
 
-    cv2.namedWindow("HA-VLN Interactive", cv2.WINDOW_NORMAL)
-
     try:
         while True:
-            # --- Update Humans ---
-            # Process signals from the queue and update meshes
             human_manager.update_humans()
-
-            # --- Step Physics (Important!) ---
-            # Step physics AFTER updating human positions/meshes for the current frame
-            # Use a fixed timestep (e.g., 1/60th of a second)
             sim.step_physics(1.0 / 60.0)
 
-            # --- Get Observation ---
             obs = sim.get_sensor_observations()
             rgb_img = obs.get("color_sensor")
-
             if rgb_img is not None:
-                # Convert RGBA to BGR for OpenCV
                 bgr_img = cv2.cvtColor(rgb_img[..., :3], cv2.COLOR_RGB2BGR)
                 cv2.imshow("HA-VLN Interactive", bgr_img)
             else:
                 print("Warning: Could not retrieve color sensor observation.")
 
-            # --- Handle Input ---
-            key = cv2.waitKey(1) & 0xFF # Use waitKey(1) for non-blocking check
-
+            key = cv2.waitKey(1) & 0xFF
             action = None
-            if key == ord('w') or key == ord('W'):
+            if key in (ord('w'), ord('W')):
                 action = "move_forward"
-            elif key == ord('a') or key == ord('A'):
+            elif key in (ord('a'), ord('A')):
                 action = "turn_left"
-            elif key == ord('d') or key == ord('D'):
+            elif key in (ord('d'), ord('D')):
                 action = "turn_right"
-            elif key == ord('q') or key == ord('Q'):
-                break # Quit
+            elif key in (ord('q'), ord('Q')):
+                break
 
-            # --- Perform Action ---
             if action:
-                sim.step(action) # Habitat integrates physics step here for agent actions
+                sim.step(action)
 
     except KeyboardInterrupt:
         print("Interrupted by user.")
     finally:
-        # --- Cleanup ---
         print("Shutting down...")
         human_manager.stop_updates()
         human_manager.cleanup_humans()
