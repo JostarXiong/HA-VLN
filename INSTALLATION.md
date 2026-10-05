@@ -3,7 +3,7 @@
 This guide provides comprehensive instructions for deploying the **HA-VLN 2.0** environment:
 - **[1. Docker Environment (Recommended)](#1-docker-environment-recommended)**: Zero-configuration deployment with pre-built Habitat-Sim and CUDA runtime.
 - **[2. Native Conda Installation (Python 3.8 / CUDA 11.8)](#2-native-conda-installation-python-38--cuda-118)**: Alternative local environment if you prefer not to use Docker.
-- **[3. Dataset Acquisition](#3-dataset-acquisition)**: Setting up Matterport3D meshes, Hugging Face assets, and legacy Google Drive mirror.
+- **[3. Dataset Acquisition](#3-dataset-acquisition)**: Setting up Matterport3D meshes and Hugging Face assets.
 - **[4. Verification & Troubleshooting](#4-verification--troubleshooting)**: Headless rendering sanity checks and common fixes.
 
 ---

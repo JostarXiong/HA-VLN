@@ -128,16 +128,3 @@ python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type inference \
 ```
 
 The resulting trajectory file is generated under `VLN-CE/data/checkpoints/cma_pm_da_aug_tune/evals/`. Refer to the [RoboWorld 2026 Participant Toolkit](https://github.com/F1y1113/havln-challenge) for official action replay, trajectory packaging, and leaderboard ranking.
-
----
-
-## 5. HA-VLN-VL Model Overview (Paper Study)
-
-> [!NOTE]
-> **Implementation Scope Note**: The HA-VLN paper investigates both **HA-VLN-CMA** and **HA-VLN-VL** ([Recurrent VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT) adaptation). In this repository, **HA-VLN-CMA** is the officially released, runnable, and benchmarked baseline (with full codebase in `agent/` and released checkpoint `ckpt.39.pth`). HA-VLN-VL is described in the paper as an exploratory study and its model code is not part of this release.
-
-In addition to CMA, the paper investigates **HA-VLN-VL**, adapting Recurrent VLN-BERT to resolve misalignment between visual cues and navigation instructions:
-
-$$s_t, p_t^a = \text{HA-VLN-VL}(s_{t-1}, X, V_t)$$
-
-where $s_t$ represents the recurrent state, $p_t^a$ denotes predicted action probabilities, $X$ contains instruction language tokens, and $V_t$ denotes egocentric visual tokens. HA-VLN-VL processes multimodal inputs via multi-layer Transformer self-attention.
