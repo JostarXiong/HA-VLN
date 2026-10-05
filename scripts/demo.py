@@ -411,10 +411,14 @@ def main():
             return 0
         finally:
             print("Cleaning up simulator and background worker threads...")
-            if human_manager:
-                human_manager.stop_updates()
-                human_manager.cleanup_humans()
-            sim.close()
+            try:
+                if human_manager:
+                    try:
+                        human_manager.stop_updates()
+                    finally:
+                        human_manager.cleanup_humans()
+            finally:
+                sim.close()
 
     # --- 6. Interactive Keyboard Control Loop ---
     print("\n--- Interactive Controls ---")
@@ -458,12 +462,18 @@ def main():
         return 130
     finally:
         print("Shutting down...")
-        if human_manager:
-            human_manager.stop_updates()
-            human_manager.cleanup_humans()
-        sim.close()
-        cv2.destroyAllWindows()
-        print("Simulator closed.")
+        try:
+            if human_manager:
+                try:
+                    human_manager.stop_updates()
+                finally:
+                    human_manager.cleanup_humans()
+        finally:
+            try:
+                sim.close()
+            finally:
+                cv2.destroyAllWindows()
+                print("Simulator closed.")
 
 if __name__ == "__main__":
     sys.exit(main() or 0)
