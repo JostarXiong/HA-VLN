@@ -2,19 +2,19 @@
 <p align="center">
 
 <h1 align="center"><strong>HA-VLN 2.0: An Open Benchmark and Leaderboard for Human-Aware Navigation in Discrete and Continuous Environments with Dynamic Multi-Human Interactions</strong></h1>
-  <p align="center"><span><a href=""></a></span>
-              <a>Yifei Dong<sup>1,*</sup>,</a>
-              <a>Fengyi Wu<sup>1,*</sup>,</a>
-              <a>Qi He<sup>1</sup>,</a>
-              <a>Lingdong Kong<sup>2</sup>,</a>
-              <a>Heng Li<sup>1</sup>,</a>
-              <a>Minghan Li<sup>1</sup>,</a>
-              <a>Zebang Cheng<sup>1</sup>,</a>
-              <a>Yuxuan Zhou<sup>1</sup>,</a>
-              <a>Jingdong Sun<sup>3</sup>,</a>
-              <a>Qi Dai<sup>4</sup>,</a>
-              <a>Alexander G. Hauptmann<sup>3</sup>,</a>
-              <a>Zhi-Qi Cheng<sup>1,†</sup></a>
+  <p align="center">
+    <span>Yifei Dong<sup>1,*</sup>,</span>
+    <span>Fengyi Wu<sup>1,*</sup>,</span>
+    <span>Qi He<sup>1</sup>,</span>
+    <span>Lingdong Kong<sup>2</sup>,</span>
+    <span>Heng Li<sup>1</sup>,</span>
+    <span>Minghan Li<sup>1</sup>,</span>
+    <span>Zebang Cheng<sup>1</sup>,</span>
+    <span>Yuxuan Zhou<sup>1</sup>,</span>
+    <span>Jingdong Sun<sup>3</sup>,</span>
+    <span>Qi Dai<sup>4</sup>,</span>
+    <span>Alexander G. Hauptmann<sup>3</sup>,</span>
+    <span>Zhi-Qi Cheng<sup>1,†</sup></span>
     <br>
     <sup>1</sup>UW, <sup>2</sup>NUS, <sup>3</sup>CMU, <sup>4</sup>Microsoft Research<br>
   </p>
@@ -76,10 +76,6 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 ## Table of Contents
 
 - [🚀 Quick Start](#-quick-start)
-  - [1. Clone Repository](#1-clone-repository)
-  - [2. Download Datasets & Checkpoint](#2-download-datasets--checkpoint)
-  - [3. Reproduce Baseline with Docker](#3-reproduce-baseline-with-docker)
-  - [4. Interactive Scene Exploration](#4-interactive-scene-exploration)
 - [🏛️ Framework Architecture](#-framework-architecture)
   - [🖥️ HA-VLN Simulator (`HASimulator/`)](#-ha-vln-simulator-hasimulator)
   - [📊 HAPS 2.0 & HA-R2R Datasets (`Data/`)](#-haps-20--ha-r2r-datasets-data)
