@@ -9,6 +9,7 @@ import threading
 import time
 import queue
 import re
+import sys
 
 # --- Configuration ---
 
@@ -26,6 +27,7 @@ DATA_PATH = get_default_data_path()
 SCENE_DATASETS_PATH = os.path.join(DATA_PATH, "scene_datasets/mp3d")
 HAPS_DATA_PATH = os.path.join(DATA_PATH, "HAPS2_0")
 HUMAN_ANNOTATIONS_PATH = os.path.join(DATA_PATH, "Multi-Human-Annotations/human_motion.json")
+DEFAULT_OUTPUT_FRAME = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test", "demo_frame.png")
 
 
 def load_glb_files(base_path):
@@ -310,7 +312,7 @@ def main():
         "--headless", action="store_true", help="Run in headless verification mode without opening a GUI window"
     )
     parser.add_argument(
-        "--output-frame", type=str, default="scripts/test/demo_frame.png", help="Path to save verification frame in headless mode"
+        "--output-frame", type=str, default=DEFAULT_OUTPUT_FRAME, help="Path to save verification frame in headless mode"
     )
     args = parser.parse_args()
 
@@ -326,37 +328,54 @@ def main():
     else:
         scene_filepath = os.path.join(scene_datasets_path, args.scan, f"{args.scan}.glb")
 
+    if not os.path.exists(scene_filepath):
+        print(f"Error: Scene file not found at {scene_filepath}", file=sys.stderr)
+        return 1
+
     print(f"Loading scene: {scene_filepath}")
     sim_cfg = make_sim_configuration(scene_filepath)
     try:
         sim = habitat_sim.Simulator(sim_cfg)
     except Exception as e:
-        print(f"Failed to create simulator: {e}")
-        return
-
-    # Initialize agent position (optional, place it somewhere reasonable)
-    initial_state = sim.get_agent(0).get_state()
-    start_pos = sim.pathfinder.get_random_navigable_point()
-    initial_state.position = start_pos
-    sim.get_agent(0).set_state(initial_state)
-    print(f"Agent starting at: {initial_state.position}")
+        print(f"Error: Failed to create simulator: {e}", file=sys.stderr)
+        return 1
 
     # --- 3. Load Human Data ---
     try:
         with open(human_annotations_path, 'r') as f:
             all_human_data = json.load(f)
     except FileNotFoundError:
-        print(f"Error: Human annotations file not found at {human_annotations_path}")
+        print(f"Error: Human annotations file not found at {human_annotations_path}", file=sys.stderr)
         sim.close()
-        return
-    except json.JSONDecodeError:
-        print(f"Error: Could not parse human annotations file at {human_annotations_path}")
+        return 1
+    except json.JSONDecodeError as e:
+        print(f"Error: Could not parse human annotations file at {human_annotations_path}: {e}", file=sys.stderr)
         sim.close()
-        return
+        return 1
+    except Exception as e:
+        print(f"Error reading human annotations: {e}", file=sys.stderr)
+        sim.close()
+        return 1
+
+    # Initialize agent position (optional, place it somewhere reasonable)
+    try:
+        initial_state = sim.get_agent(0).get_state()
+        start_pos = sim.pathfinder.get_random_navigable_point()
+        initial_state.position = start_pos
+        sim.get_agent(0).set_state(initial_state)
+        print(f"Agent starting at: {initial_state.position}")
+    except Exception as e:
+        print(f"Warning: Failed to initialize random start position: {e}", file=sys.stderr)
 
     # --- 4. Initialize Human Manager ---
-    human_manager = HumanManager(sim, all_human_data, args.scan, haps_data_path=haps_data_path)
-    human_manager.start_updates()
+    human_manager = None
+    try:
+        human_manager = HumanManager(sim, all_human_data, args.scan, haps_data_path=haps_data_path)
+        human_manager.start_updates()
+    except Exception as e:
+        print(f"Error initializing human manager: {e}", file=sys.stderr)
+        sim.close()
+        return 1
 
     # --- 5. Display / Verification Handling ---
     has_display = bool(os.environ.get("DISPLAY")) and not args.headless
@@ -368,26 +387,34 @@ def main():
             has_display = False
 
     if not has_display:
-        print("\n--- Headless Verification Mode ---")
-        print("Stepping simulator physics and dynamic human animations...")
-        human_manager.update_humans()
-        sim.step_physics(1.0 / 60.0)
-        obs = sim.get_sensor_observations()
-        rgb_img = obs.get("color_sensor")
-        if rgb_img is not None:
+        try:
+            print("\n--- Headless Verification Mode ---")
+            print("Stepping simulator physics and dynamic human animations...")
+            human_manager.update_humans()
+            sim.step_physics(1.0 / 60.0)
+            obs = sim.get_sensor_observations()
+            rgb_img = obs.get("color_sensor") if obs else None
+            if rgb_img is None:
+                print("Error: Could not retrieve color sensor observation from simulator.", file=sys.stderr)
+                return 1
+
             output_dir = os.path.dirname(os.path.abspath(args.output_frame))
             os.makedirs(output_dir, exist_ok=True)
             bgr_img = cv2.cvtColor(rgb_img[..., :3], cv2.COLOR_RGB2BGR)
-            cv2.imwrite(args.output_frame, bgr_img)
+            save_ok = cv2.imwrite(args.output_frame, bgr_img)
+            if not save_ok or not os.path.exists(args.output_frame) or os.path.getsize(args.output_frame) == 0:
+                print(f"Error: cv2.imwrite failed to save verification frame to: {args.output_frame}", file=sys.stderr)
+                return 1
+
             print(f"Verification frame successfully rendered and saved to: {args.output_frame}")
-        else:
-            print("Warning: Could not retrieve color sensor observation.")
-        print("Cleaning up simulator and background worker threads...")
-        human_manager.stop_updates()
-        human_manager.cleanup_humans()
-        sim.close()
-        print("Headless verification completed successfully.")
-        return
+            print("Headless verification completed successfully.")
+            return 0
+        finally:
+            print("Cleaning up simulator and background worker threads...")
+            if human_manager:
+                human_manager.stop_updates()
+                human_manager.cleanup_humans()
+            sim.close()
 
     # --- 6. Interactive Keyboard Control Loop ---
     print("\n--- Interactive Controls ---")
@@ -403,12 +430,12 @@ def main():
             sim.step_physics(1.0 / 60.0)
 
             obs = sim.get_sensor_observations()
-            rgb_img = obs.get("color_sensor")
+            rgb_img = obs.get("color_sensor") if obs else None
             if rgb_img is not None:
                 bgr_img = cv2.cvtColor(rgb_img[..., :3], cv2.COLOR_RGB2BGR)
                 cv2.imshow("HA-VLN Interactive", bgr_img)
             else:
-                print("Warning: Could not retrieve color sensor observation.")
+                print("Warning: Could not retrieve color sensor observation.", file=sys.stderr)
 
             key = cv2.waitKey(1) & 0xFF
             action = None
@@ -424,15 +451,19 @@ def main():
             if action:
                 sim.step(action)
 
+        return 0
+
     except KeyboardInterrupt:
         print("Interrupted by user.")
+        return 130
     finally:
         print("Shutting down...")
-        human_manager.stop_updates()
-        human_manager.cleanup_humans()
+        if human_manager:
+            human_manager.stop_updates()
+            human_manager.cleanup_humans()
         sim.close()
         cv2.destroyAllWindows()
         print("Simulator closed.")
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)

@@ -261,7 +261,7 @@ Scene meshes must reside at `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
 
 ### HA-VLN Simulation Assets & Annotations
 
-Large simulation assets (HAPS 2.0 dynamic human motion meshes, HA-R2R navigation episodes, and CMA baseline weights) are officially hosted on [**Hugging Face (fly1113/HA-VLN)**](https://huggingface.co/datasets/fly1113/HA-VLN). Multi-human placement metadata (`human_motion.json`) and collision evaluation baselines are fetched from the pinned GitHub release.
+Large simulation assets (HAPS 2.0 dynamic human motion meshes, HA-R2R navigation episodes, and CMA baseline weights) are officially hosted on [**Hugging Face (fly1113/HA-VLN)**](https://huggingface.co/datasets/fly1113/HA-VLN). Multi-human placement metadata (`human_motion.json`) and collision evaluation baselines are fetched from the pinned GitHub repository commit.
 
 The included downloader script automatically orchestrates and verifies downloads from both sources with SHA-256 integrity checks:
 

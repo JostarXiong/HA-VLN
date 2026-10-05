@@ -30,9 +30,9 @@ The **Cross-Modal Attention (CMA)** agent (`CMAPolicy` in `VLN-CE/`) integrates 
    - At each timestep $t$, a linear projection predicts action logits over navigation primitives (Move Forward, Turn Left, Turn Right, Stop):
      $$P(a_t \mid f_t) = \text{Softmax}(\text{Linear}_{\text{action}}(f_t))$$
 5. **Progress Monitor**:
-   - A linear projection with $\tanh$ activation predicts normalized progress towards the goal (based on remaining Euclidean distance):
+   - A linear projection with $\tanh$ activation predicts normalized progress towards the goal (supervised by oracle geodesic distance via `VLNOracleProgressSensor`):
      $$y_t = \tanh(\mathbf{w}_{\text{pm}}^\top h_t + b_{\text{pm}}) \in [-1, 1]$$
-     trained via MSE against normalized distance progress.
+     trained via MSE against normalized geodesic distance progress.
 
 ---
 

@@ -1,7 +1,7 @@
 # Waypoint Models for Instruction-guided Navigation in Continuous Environments
 
 <p align="center">
-  <img width="800" height="299" src="/data/res/waypoint_example.gif" alt="Waypoint example GIF">
+  <img width="800" height="299" src="https://raw.githubusercontent.com/jacobkrantz/VLN-CE/master/data/res/waypoint_example.gif" alt="Waypoint example GIF">
 </p>
 
 [Project Webpage](https://jacobkrantz.github.io/waypoint-vlnce/) — [Paper](https://arxiv.org/abs/2110.02207)
@@ -24,7 +24,7 @@ These config files exist to train and evaluate waypoint-based models for VLN-CE 
 |  C  | Continuous                  |
 |  D  | Discrete                    |
 
-Models were trained via DDPPO using 64 GPUs. An example [slurm script](/sbatch_scripts/waypoint_train.sh).
+Models were trained via DD-PPO using 64 GPUs (see [VLN-CE upstream repository](https://github.com/jacobkrantz/VLN-CE) for Slurm cluster scripts).
 
 ## Pretrained Models
 
