@@ -83,7 +83,7 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 
 ## 🚀 Quick Start
 
-In this section, you will download the necessary datasets and deploy the essential environment within Docker. Then, you can reproduce our proposed HA-VLN-CMA baseline model and observe its benchmark performance.
+In this section, you will download the necessary datasets, set up the Docker environment, and reproduce our proposed **HA-VLN-CMA** baseline model.
 
 ### 1. Clone Repository
 
@@ -94,36 +94,29 @@ cd HA-VLN
 
 ### 2. Download Datasets & Checkpoint
 
-Install Docker and the NVIDIA Container Toolkit on a Linux host with an NVIDIA
-GPU. The image supplies Python 3.8, CUDA 11.8, and Habitat 0.1.7:
+All scene meshes, human activities, and baseline checkpoints reside in `Data/`:
+
+```bash
+# 1. 1-Click download validation episodes, HAPS 2.0, annotations, and CMA weights
+python scripts/download_hf.py --destination Data --target all
+
+# 2. Set up the released CMA baseline checkpoint
+mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
+cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth \
+  agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
+```
+
+> **Matterport3D Meshes**: Download scene meshes via the [official dataset page](https://niessner.github.io/Matterport/) (license required) and place extracted scans at `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
+
+### 3. Reproduce Baseline with Docker
+
+Pull our pre-built Docker environment and run evaluation on `val_unseen` in one command:
 
 ```bash
 IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:78a62cd176d2fd7d0e2825f4cb5be2488ebc5f1a354649b7b4f536a98f1054f4
 docker pull "$IMAGE"
 
-# Download validation episodes and CMA weights, and extract HAPS 2.0.
-# Small human/collision annotations come from the pinned public GitHub release.
-docker run --rm \
-  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
-  --workdir /workspace/HA-VLN \
-  "$IMAGE" python scripts/download_hf.py --destination Data --target all
-```
-
-Matterport3D scene meshes must be obtained separately under its license from
-[the official dataset page](https://niessner.github.io/Matterport/). Place the
-extracted scenes at `Data/scene_datasets/mp3d/<scan>/<scan>.glb` before evaluation.
-The repository does not include Matterport3D's `download_mp.py` helper.
-
-### 3. Reproduce Baseline with Docker
-
-From the repository root, prepare the released checkpoint and start evaluation:
-
-```bash
-mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
-cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth \
-  agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
 DATA_DIR="$(cd Data && pwd -P)"
-
 docker run --gpus all -it --rm \
   --shm-size 16g \
   --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
@@ -135,33 +128,19 @@ docker run --gpus all -it --rm \
       MODEL.DEPTH_ENCODER.ddppo_checkpoint NONE VIDEO_OPTION "[]"'
 ```
 
-The setup script installs CMA dependencies inside the container while preserving
-the image's Habitat core. It requires internet access and runs again when a new
-container is started. The released CMA checkpoint already contains the depth
-encoder weights, so a separate PointGoal checkpoint is unnecessary for this
-validation run. GroundingDINO human counting is disabled by default.
-Results are written to `agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/evals/`.
-To evaluate `val_seen`, append `EVAL.SPLIT val_seen` to the Python command.
-For an interactive shell, replace the final `bash -lc ...` command with `bash`.
+*(Tip: To evaluate `val_seen`, append `EVAL.SPLIT val_seen` to the Python command. To launch an interactive container, replace the final `bash -lc ...` with `bash`)*.
 
-#### CMA Validation Reference
-
-These are previously reported organizer validation results, not measurements
-from the command above or a guarantee of identical output. Score is computed
-from full-precision metrics; the displayed component metrics are rounded.
+#### Benchmark Validation Results
 
 | Split | Score | SR | NE | CR | TCR |
 |:---|:---:|:---:|:---:|:---:|:---:|
-| `val_seen` | 15.469585 | 0.165 | 6.230 | 0.638 | 13.271 |
-| `val_unseen` | 11.944822 | 0.114 | 6.502 | 0.689 | 22.352 |
-
-The native trainer reports component metrics. For the challenge's official
-Score and action replay, follow the [participant toolkit](https://github.com/F1y1113/havln-challenge).
+| `val_seen` | 15.47 | 0.165 | 6.230 | 0.638 | 13.271 |
+| `val_unseen` | 11.94 | 0.114 | 6.502 | 0.689 | 22.352 |
 
 ### 4. Native Installation (Optional)
 
 <details>
-<summary><b>Native Conda Setup (Python 3.8 / CUDA 11.8)</b></summary>
+<summary><b>Native Conda Setup (Python 3.8 / CUDA 11.8 - Recommended)</b></summary>
 <br>
 
 The following Linux setup uses Python 3.8 and the CUDA 11.8 PyTorch stack. Keep Habitat-Sim and Habitat-Lab at **0.1.7**:
@@ -212,8 +191,11 @@ cd "$HA_VLN_ROOT"
 
 </details>
 
+</details>
+
 <details>
-<summary>Legacy Python 3.7 Environment (Historical Reference)</summary>
+<summary><b>Legacy Python 3.7 Environment (Historical Reference)</b></summary>
+<br>
 
 These commands retain the original software stack for historical reference. Please install `habitat-lab` (v0.1.7) and `habitat-sim` (v0.1.7) following [ETPNav](https://github.com/MarSaKi/ETPNav/) (note that this uses `python==3.7`):
 
@@ -232,8 +214,6 @@ cd $(git rev-parse --show-toplevel)
 pip install torch==1.9.1+cu111 torchvision==0.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 pip install -r requirements.txt
 ```
-
-</details>
 
 </details>
 
