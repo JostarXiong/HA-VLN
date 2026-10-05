@@ -366,7 +366,12 @@ SIMULATOR:
   RECOMPUTE_NAVMESH_PATH: ../Data/recompute_navmesh
 ```
 
-To additionally enable online human detection, counting, and observation logging via GroundingDINO, set `HUMAN_COUNTING: True` in the task config. Note that GroundingDINO is an optional perception module; standard navigation policies (such as HA-VLN-CMA) do not require it. For environment-specific installation, see the optional GroundingDINO setup in [Native Installation](#-quick-start).
+> **Human Counting API (Optional)**:
+> Online human detection and counting relies on [GroundingDINO](HASimulator/detector.py), which is **disabled by default** (`HUMAN_COUNTING: False`) and **not pre-installed in the Docker image**. Standard navigation baseline models (such as HA-VLN-CMA) do not require this module.
+> 
+> If you wish to enable human counting:
+> 1. Set `HUMAN_COUNTING: True` in [HASimulator/config/HAVLNCE_task.yaml](HASimulator/config/HAVLNCE_task.yaml) (or pass `TASK_CONFIG.SIMULATOR.HUMAN_COUNTING True` via CLI options).
+> 2. Install GroundingDINO and download its weights by following the setup instructions in [Native Installation](#4-native-installation-optional) (for Docker containers, refer to the **Python 3.8** instructions).
 
 ---
 
