@@ -479,7 +479,10 @@ Demo 4|Demo 5|Demo 6
 
 🚀🚀🚀 [**Download Here**](https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing)
 
+
 ### HAPS Dataset 2.0
+
+<details>
 
 In real-world scenarios, human motion typically adapts and interacts with the surrounding region. The proposed **Human Activity and Pose Simulation (HAPS) Dataset 2.0** improves upon [**HAPS 1.0**](https://github.com/lpercc/HA3D_simulator/) by making the following enhancements:  
 1. *Refining and diversifying human motions.*  
@@ -495,7 +498,11 @@ Each **120-frame SMPL mesh sequence** $\mathcal{H} = \langle h_1, h_2, \ldots, h
 
 [^1]: **H** = **R**<sup>486 × 120 × (10 + 72 + 6890 × 3)</sup>, representing **486 models**, each with **120 frames**, including **shape, pose, and mesh vertex parameters**.
 
+</details>
+
 ### HA-R2R Dataset
+
+<details>
 
 Instruction Examples Table presents four instruction examples from the **Human-Aware Room-to-Room (HA-R2R) dataset**. These cases include various scenarios such as:
 - **Multi-human interactions** (e.g., 1, 2, 3),
@@ -527,7 +534,11 @@ These examples illustrate the diversity of **human-aligned navigation instructio
 
 ---
 
+</details>
+
 ### 🏃 Human Activities Annotation
+
+<details>
 
 #### 🌍 **Stage 1: Coarse Annotation**
 - **Goal:** Assign human motions to specific **regions** and **objects** using a **coarse-to-fine approach**.
@@ -565,6 +576,8 @@ These examples illustrate the diversity of **human-aligned navigation instructio
 <div align="center">
   <img src="demo/figs/dataset_analy.png" alt="image" width="500"/>
 </div>
+
+</details>
 
 ## Contributing
 
