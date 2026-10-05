@@ -38,7 +38,7 @@
 </p>
 
 <div align="center">
-  <img src="demo/figs/task_define_final-1.png" alt="image" width="700"/>
+  <img src="demo/figs/task_define_final-1.png" alt="image" width="750"/>
 </div>
 
 ## 📰 News
