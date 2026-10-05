@@ -80,7 +80,7 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
   - [2. Download Datasets & Checkpoint](#2-download-datasets--checkpoint)
   - [3. Reproduce Baseline with Docker](#3-reproduce-baseline-with-docker)
   - [4. Interactive Scene Exploration](#4-interactive-scene-exploration)
-- [🏛️ Repository Architecture (The Three Pillars)](#-repository-architecture-the-three-pillars)
+- [🏛️ Framework Architecture](#-framework-architecture)
   - [🖥️ HA-VLN Simulator (`HASimulator/`)](#-ha-vln-simulator-hasimulator)
   - [📊 HAPS 2.0 & HA-R2R Datasets (`Data/`)](#-haps-20--ha-r2r-datasets-data)
   - [🤖 Baseline Agents (`agent/`)](#-baseline-agents-agent)
@@ -149,12 +149,12 @@ To evaluate `val_seen`, append `EVAL.SPLIT val_seen` to the Python command.
 
 The following baseline metrics reflect the published HA-VLN 2.0 evaluation results:
 
-| Split | Score | SR | NE | CR | TCR |
-|:---|:---:|:---:|:---:|:---:|:---:|
-| `val_seen` | 15.47 | 0.165 | 6.230 | 0.638 | 13.271 |
-| `val_unseen` | 11.94 | 0.114 | 6.502 | 0.689 | 22.352 |
+| Split | Success Rate (SR) ↑ | Navigation Error (NE, m) ↓ | Collision Rate (CR) ↓ | Total Collision Rate (TCR) ↓ |
+|:---|:---:|:---:|:---:|:---:|
+| `val_seen` | 0.165 | 6.230 | 0.638 | 13.271 |
+| `val_unseen` | 0.114 | 6.502 | 0.689 | 22.352 |
 
-The native trainer reports component metrics; use the [participant toolkit](https://github.com/F1y1113/havln-challenge) for official action replay and Score.
+> *Note: For official competition action replay, trajectory validation, and leaderboard ranking, refer to the [participant toolkit](https://github.com/F1y1113/havln-challenge).*
 
 ### 4. Interactive Scene Exploration
 
@@ -180,9 +180,9 @@ docker run --gpus all -it --rm \
 
 ---
 
-## 🏛️ Repository Architecture (The Three Pillars)
+## 🏛️ Framework Architecture
 
-HA-VLN 2.0 is organized into three decoupled pillars:
+The HA-VLN 2.0 framework is organized into three core modules:
 
 ### 🖥️ HA-VLN Simulator (`HASimulator/`)
 Extends Habitat-Sim with dynamic 3D human motion simulation, multi-threaded rendering, and real-time navigation mesh recomputation.

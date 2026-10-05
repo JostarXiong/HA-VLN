@@ -116,10 +116,10 @@ python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval \
 
 ### Published Benchmark Baseline Results
 
-| Split | Score | Success Rate (SR) | Navigation Error (NE, m) | Collision Rate (CR) | Total Collision Rate (TCR) |
-|:---|:---:|:---:|:---:|:---:|:---:|
-| **`val_seen`** | 15.47 | 0.165 | 6.230 | 0.638 | 13.271 |
-| **`val_unseen`** | 11.94 | 0.114 | 6.502 | 0.689 | 22.352 |
+| Split | Success Rate (SR) ↑ | Navigation Error (NE, m) ↓ | Collision Rate (CR) ↓ | Total Collision Rate (TCR) ↓ |
+|:---|:---:|:---:|:---:|:---:|
+| **`val_seen`** | 0.165 | 6.230 | 0.638 | 13.271 |
+| **`val_unseen`** | 0.114 | 6.502 | 0.689 | 22.352 |
 
 ---
 
