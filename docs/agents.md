@@ -137,9 +137,12 @@ The resulting trajectory file is generated under `agent/VLN-CE/data/checkpoints/
 
 ---
 
-## 6. HA-VLN-VL Agent Overview
+## 6. HA-VLN-VL Model Overview (Paper Study)
 
-In addition to CMA, the paper investigates **HA-VLN-VL**, adapting [Recurrent VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT) to resolve misalignment between visual cues and navigation instructions:
+> [!NOTE]
+> **Implementation Scope Note**: The HA-VLN paper investigates both **HA-VLN-CMA** and **HA-VLN-VL** ([Recurrent VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT) adaptation). In this repository, **HA-VLN-CMA** is the officially released, runnable, and benchmarked baseline (with full codebase in `agent/` and released checkpoint `ckpt.39.pth`). HA-VLN-VL is described in the paper as an exploratory study and its model code is not part of this release.
+
+In addition to CMA, the paper investigates **HA-VLN-VL**, adapting Recurrent VLN-BERT to resolve misalignment between visual cues and navigation instructions:
 
 $$s_t, p_t^a = \text{HA-VLN-VL}(s_{t-1}, X, V_t)$$
 

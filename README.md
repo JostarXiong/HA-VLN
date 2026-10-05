@@ -71,7 +71,7 @@ If you find this repository or our paper useful, please consider **starring** th
 
 ## Abstract
 
-We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VLN to include both discrete (**HA-VLN-DE**) and continuous (**HA-VLN-CE**) environments with social behaviors. The [HA-VLN Simulator](HASimulator) enables real-time rendering of human activities and provides unified APIs for navigation development. It introduces the Human Activity and Pose Simulation ([**HAPS 2.0 Dataset**](Data/HAPS2_0)) with detailed 3D human motion models and the HA Room-to-Room ([**HA-R2R**](Data/HA-R2R)) Dataset with complex navigation instructions that include human activities. We propose an HA-VLN Vision-and-Language model ([**HA-VLN-VL**](agent)) and a Cross-Model Attention model ([**HA-VLN-CMA**](agent)) to address visual-language understanding and dynamic decision-making challenges.
+We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VLN to include both discrete (**HA-VLN-DE**) and continuous (**HA-VLN-CE**) environments with social behaviors. The [HA-VLN Simulator](HASimulator) enables real-time rendering of human activities and provides unified APIs for navigation development. It introduces the Human Activity and Pose Simulation ([**HAPS 2.0 Dataset**](Data/HAPS2_0)) with detailed 3D human motion models and the HA Room-to-Room ([**HA-R2R**](Data/HA-R2R)) Dataset with complex navigation instructions that include human activities. This repository provides the official implementation, pre-trained weights, and benchmark pipeline for the Cross-Model Attention baseline ([**HA-VLN-CMA**](agent)), addressing visual-language understanding and dynamic decision-making challenges.
 
 ## Table of Contents
 
@@ -166,7 +166,6 @@ Experience the human-populated simulator yourself by navigating interactively us
 | **A** | Turn left ($15^{\circ}$) |
 | **D** | Turn right ($15^{\circ}$) |
 
-**Run via Docker:**
 ```bash
 docker run --gpus all -it --rm \
   --shm-size 16g \
@@ -177,12 +176,6 @@ docker run --gpus all -it --rm \
   "$IMAGE" python demo.py --scan 1LXtFkjw3qL
 ```
 
-**Run Natively:**
-```bash
-cd scripts
-python demo.py --scan 1LXtFkjw3qL
-```
-
 > 💡 *Need a native Conda environment or C++ source build? Check the comprehensive [Environment Installation Guide](docs/installation.md).*
 
 ---
@@ -190,12 +183,6 @@ python demo.py --scan 1LXtFkjw3qL
 ## 🏛️ Repository Architecture (The Three Pillars)
 
 HA-VLN 2.0 is organized into three decoupled pillars:
-
-```mermaid
-flowchart LR
-    A["🎮 HASimulator/<br/>(Simulator Engine)"] <--> B["📊 Data/<br/>(Dynamic Assets & Instructions)"]
-    A <--> C["🤖 agent/<br/>(Baseline Models & Policies)"]
-```
 
 ### 🖥️ HA-VLN Simulator (`HASimulator/`)
 Extends Habitat-Sim with dynamic 3D human motion simulation, multi-threaded rendering, and real-time navigation mesh recomputation.
