@@ -32,9 +32,6 @@
   <a href="https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing" target="_blank">
     <img src="https://img.shields.io/badge/Googledrive-dataset-purple">
   </a>
-  <a href="https://f1y1113.github.io/havln-challenge/" target="_blank">
-    <img src="https://img.shields.io/badge/Challenge-RoboWorld2026-orange">
-  </a>
   <a href="https://github.com/UWMILab/HA-VLN/blob/main/LICENSE" target="_blank">
     <img src="https://img.shields.io/badge/License-MIT-green">
   </a>
@@ -149,8 +146,6 @@ The following baseline metrics reflect the published HA-VLN 2.0 evaluation resul
 |:---|:---:|:---:|:---:|:---:|
 | `val_seen` | 0.165 | 6.230 | 0.638 | 13.271 |
 | `val_unseen` | 0.114 | 6.502 | 0.689 | 22.352 |
-
-> *Note: For official competition action replay, trajectory validation, and leaderboard ranking, refer to the [participant toolkit](https://github.com/F1y1113/havln-challenge).*
 
 ### 4. Interactive Scene Exploration
 

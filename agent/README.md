@@ -85,16 +85,3 @@ The following metrics reflect the published HA-VLN 2.0 evaluation results:
 |:---|:---:|:---:|:---:|:---:|
 | `val_seen` | 0.165 | 6.230 | 0.638 | 13.271 |
 | `val_unseen` | 0.114 | 6.502 | 0.689 | 22.352 |
-
----
-
-## 4. Test Set Inference & Challenge Submission
-
-To run inference on the held-out test split and export trajectories:
-
-```bash
-python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type inference \
-  MODEL.DEPTH_ENCODER.ddppo_checkpoint NONE VIDEO_OPTION "[]"
-```
-
-The resulting trajectory file is generated under `VLN-CE/data/checkpoints/cma_pm_da_aug_tune/evals/`. Refer to the [RoboWorld 2026 Participant Toolkit](https://github.com/F1y1113/havln-challenge) for official action replay, trajectory packaging, and leaderboard ranking.
