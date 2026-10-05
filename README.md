@@ -97,9 +97,11 @@ cd HA-VLN
 All scene meshes, human activities, and baseline checkpoints reside in `Data/`:
 
 ```bash
-# 1. Download Matterport3D scene meshes into Data/scene_datasets
-# License required: https://niessner.github.io/Matterport/
-python download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
+# 1. Obtain download_mp.py after Matterport3D access approval:
+# https://niessner.github.io/Matterport/
+python3 /path/to/download_mp.py -o Data/scene_datasets --task_data habitat
+# After task-data download, press Ctrl-C at the main-dataset prompt.
+unzip Data/scene_datasets/v1/tasks/mp3d_habitat.zip -d Data/scene_datasets
 
 # 2. 1-Click download validation episodes, HAPS 2.0, annotations, and CMA weights
 python scripts/download_hf.py --destination Data --target all
@@ -112,7 +114,7 @@ cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth \
 
 ### 3. Reproduce Baseline with Docker
 
-Pull our pre-built Docker environment and run evaluation on `val_unseen` in one command:
+With Docker and NVIDIA Container Toolkit installed, run evaluation on `val_unseen`:
 
 ```bash
 IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:78a62cd176d2fd7d0e2825f4cb5be2488ebc5f1a354649b7b4f536a98f1054f4
@@ -132,12 +134,14 @@ docker run --gpus all -it --rm \
 
 *(Tip: To evaluate `val_seen`, append `EVAL.SPLIT val_seen` to the Python command. To launch an interactive container, replace the final `bash -lc ...` with `bash`)*.
 
-#### Benchmark Validation Results
+#### Published Benchmark Reference
 
 | Split | Score | SR | NE | CR | TCR |
 |:---|:---:|:---:|:---:|:---:|:---:|
 | `val_seen` | 15.47 | 0.165 | 6.230 | 0.638 | 13.271 |
 | `val_unseen` | 11.94 | 0.114 | 6.502 | 0.689 | 22.352 |
+
+The trainer reports component metrics; use the [participant toolkit](https://github.com/F1y1113/havln-challenge) for official action replay and Score.
 
 ### 4. Native Installation (Optional)
 
@@ -199,6 +203,18 @@ cd "$HA_VLN_ROOT"
 
 *Note: GroundingDINO is only required if you explicitly enable online human detection and counting (`TASK_CONFIG.SIMULATOR.HUMAN_COUNTING: True`). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
 
+In a GPU-enabled Docker container, prepare the existing environment first:
+
+```bash
+source /opt/conda/etc/profile.d/conda.sh
+conda activate havlnce
+HA_VLN_ROOT=/workspace/HA-VLN
+apt-get update
+apt-get install -y git
+```
+
+Then run only the optional DINO steps below; skip native environment creation.
+
 ```bash
 cd "$HA_VLN_ROOT"
 python -m pip install -r requirements-dino-py38.txt
@@ -231,6 +247,7 @@ python -m pip check
 These commands retain the original software stack for historical reference. Please install `habitat-lab` (v0.1.7) and `habitat-sim` (v0.1.7) following [ETPNav](https://github.com/MarSaKi/ETPNav/) (note that this uses `python==3.7`):
 
 ```bash
+HA_VLN_ROOT="$(pwd)"
 conda create -n havlnce python=3.7
 conda activate havlnce
 conda install -c aihabitat -c conda-forge habitat-sim=0.1.7 headless
@@ -239,7 +256,7 @@ cd habitat-lab
 pip install -r requirements.txt
 pip install -r habitat_baselines/rl/requirements.txt
 python setup.py develop --all
-cd $(git rev-parse --show-toplevel)
+cd "$HA_VLN_ROOT"
 
 # Agent packages (Python 3.7)
 pip install torch==1.9.1+cu111 torchvision==0.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
@@ -253,18 +270,21 @@ pip install -r requirements.txt
 *Note: GroundingDINO is only required if you explicitly enable online human detection and counting (`TASK_CONFIG.SIMULATOR.HUMAN_COUNTING: True`). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
 
 ```bash
-cd HASimulator
-git clone https://github.com/IDEA-Research/GroundingDINO.git
-cd GroundingDINO/
-# modify requirements.txt to set supervision==0.11.1
-export CUDA_HOME=/usr/local/cuda
-pip install -e .
+cd "$HA_VLN_ROOT"
+# These pinned DINO dependencies also support Python 3.7 (supervision==0.11.1).
+python -m pip install -r requirements-dino-py38.txt
+git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
+git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
+# Requires a system CUDA 11.1 toolkit and a compatible host compiler.
+export CUDA_HOME=/usr/local/cuda-11.1
+export PATH="$CUDA_HOME/bin:$PATH"
+MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
+  -e HASimulator/GroundingDINO
 
-mkdir -p weights
+mkdir -p HASimulator/GroundingDINO/weights
 curl -fL --retry 3 \
   https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
-  -o weights/groundingdino_swint_ogc.pth
-cd $(git rev-parse --show-toplevel)
+  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
 ```
 
 </details>
@@ -277,13 +297,15 @@ cd $(git rev-parse --show-toplevel)
 
 ### 1. Matterport3D Scene Meshes (`Data/scene_datasets`)
 
-To use the simulator, download the [Matterport3D dataset](https://niessner.github.io/Matterport/) (access approval required). Place the downloaded `download_mp.py` in your workspace and run:
+Request access on the [Matterport3D dataset page](https://niessner.github.io/Matterport/): sign its Terms of Use and send it to `matterport3d@googlegroups.com`. Use the helper supplied after approval; it is not distributed here. For the locally verified Python 3 helper:
 
 ```bash
-python download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
+python3 /path/to/download_mp.py -o Data/scene_datasets --task_data habitat
+# After task-data download, press Ctrl-C at the main-dataset prompt.
+unzip Data/scene_datasets/v1/tasks/mp3d_habitat.zip -d Data/scene_datasets
 ```
 
-The final scene meshes should reside at `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
+The final scene meshes should reside at `Data/scene_datasets/mp3d/<scan>/<scan>.glb`. Raw `--type matterport_mesh ...` downloads do not provide this Habitat layout. If your supplied helper requires Python 2, use that interpreter.
 
 ### 2. HA-VLN Simulation Assets & Annotations
 
@@ -371,7 +393,7 @@ SIMULATOR:
 > 
 > If you wish to enable human counting:
 > 1. Set `HUMAN_COUNTING: True` in [HASimulator/config/HAVLNCE_task.yaml](HASimulator/config/HAVLNCE_task.yaml) (or pass `TASK_CONFIG.SIMULATOR.HUMAN_COUNTING True` via CLI options).
-> 2. Install GroundingDINO and download its weights by following the setup instructions in [Native Installation](#4-native-installation-optional) (for Docker containers, refer to the **Python 3.8** instructions).
+> 2. Install GroundingDINO and download its weights by following the setup instructions in [Native Installation](#4-native-installation-optional) (for Docker, use only the **Python 3.8 optional GroundingDINO block**).
 
 ---
 
