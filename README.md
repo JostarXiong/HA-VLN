@@ -41,6 +41,14 @@
   <img src="demo/figs/task_define_final-1.png" alt="image" width="700"/>
 </div>
 
+## 📰 News
+
+- **[2026-09]** 🏆 We are organizing the [**HA-VLN track**](https://github.com/F1y1113/havln-challenge) of the [RoboWorld Challenge 2026](https://roboworld2026.github.io/), affiliated with the [RoboPAD Workshop at NeurIPS 2026](https://robotpad2026.github.io/). Join us in advancing human-aware navigation, participants from all backgrounds are welcome!
+- **[2026-06]** 🎉 [HA-VLN 2.0](https://uwmilab.github.io/HA-VLN-webpage) has been accepted to **IROS 2026**!
+- **[2025-08]** We have substantially upgraded the repository and improved usability, and organized a small-scale internal competition to support testing and community feedback.
+- **[2025-03]** 🚀 We release [HA-VLN 2.0](https://uwmilab.github.io/HA-VLN-webpage), unifying discrete and continuous human-aware navigation with **HAPS 2.0**, dynamic multi-human interactions, and social-awareness evaluation across **16,844 instructions**, check our [Technical Report](https://arxiv.org/abs/2503.14229)!
+- **[2024-09]** 🎉 HA-VLN 1.0 has been accepted to the NeurIPS 2024 Datasets and Benchmarks Track!
+
 ## 🧭 What does HA-VLN 2.0 look like?
 
 | Navigation Demo 1 | Navigation Demo 2 |
