@@ -32,7 +32,6 @@ from vlnce_baselines.common.utils import extract_instruction_tokens
 import sys 
 sys.path.append('../..')
 from HASimulator.metric import *
-from HASimulator.detector import Detector
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -55,7 +54,10 @@ class BaseVLNCETrainer(BaseILTrainer):
         self.obs_transforms = []
         self.start_epoch = 0
         self.step_id = 0
-        self.detector = Detector().to(self.device)
+        self.detector = None
+        if self.config.TASK_CONFIG.SIMULATOR.HUMAN_COUNTING:
+            from HASimulator.detector import Detector
+            self.detector = Detector().to(self.device)
 
     def _initialize_policy(
         self,

@@ -94,47 +94,69 @@ cd HA-VLN
 
 ### 2. Download Datasets & Checkpoint
 
-All scene meshes, human activities, and baseline checkpoints reside in `Data/`:
-
-```bash
-# 1. Download Matterport3D scene meshes into Data/scene_datasets
-# License required: https://niessner.github.io/Matterport/
-python2 download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
-
-# 2. 1-Click download HA-R2R, HAPS 2.0, annotations, and pretrained models from Hugging Face
-pip install huggingface-hub
-huggingface-cli download fly1113/HA-VLN --local-dir Data --repo-type dataset
-
-# 3. Set up the released CMA baseline checkpoint
-mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
-cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
-```
-
-### 3. Reproduce Baseline with Docker
-
-Pull our pre-built Docker image and run evaluation on `val_unseen` in one command:
+Install Docker and the NVIDIA Container Toolkit on a Linux host with an NVIDIA
+GPU. The image supplies Python 3.8, CUDA 11.8, and Habitat 0.1.7:
 
 ```bash
 IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:78a62cd176d2fd7d0e2825f4cb5be2488ebc5f1a354649b7b4f536a98f1054f4
 docker pull "$IMAGE"
 
+# Download validation episodes and CMA weights, and extract HAPS 2.0.
+# Small human/collision annotations come from the pinned public GitHub release.
+docker run --rm \
+  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
+  --workdir /workspace/HA-VLN \
+  "$IMAGE" python scripts/download_hf.py --destination Data --target all
+```
+
+Matterport3D scene meshes must be obtained separately under its license from
+[the official dataset page](https://niessner.github.io/Matterport/). Place the
+extracted scenes at `Data/scene_datasets/mp3d/<scan>/<scan>.glb` before evaluation.
+The repository does not include Matterport3D's `download_mp.py` helper.
+
+### 3. Reproduce Baseline with Docker
+
+From the repository root, prepare the released checkpoint and start evaluation:
+
+```bash
+mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
+cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth \
+  agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
+DATA_DIR="$(cd Data && pwd -P)"
+
 docker run --gpus all -it --rm \
   --shm-size 16g \
   --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
-  --mount type=bind,source="$(pwd)/Data",target=/workspace/HA-VLN/Data \
-  --mount type=bind,source="$(pwd)/Data",target=/data/havln2 \
-  --workdir /workspace/HA-VLN/agent \
-  "$IMAGE" python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval
+  --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
+  --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
+  --workdir /workspace/HA-VLN \
+  "$IMAGE" bash -lc 'bash scripts/setup_docker_cma.sh && cd agent &&
+    python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval \
+      MODEL.DEPTH_ENCODER.ddppo_checkpoint NONE VIDEO_OPTION "[]"'
 ```
 
-*(Tip: To launch an interactive development shell, simply change `python run.py ...` to `bash`)*.
+The setup script installs CMA dependencies inside the container while preserving
+the image's Habitat core. It requires internet access and runs again when a new
+container is started. The released CMA checkpoint already contains the depth
+encoder weights, so a separate PointGoal checkpoint is unnecessary for this
+validation run. GroundingDINO human counting is disabled by default.
+Results are written to `agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/evals/`.
+To evaluate `val_seen`, append `EVAL.SPLIT val_seen` to the Python command.
+For an interactive shell, replace the final `bash -lc ...` command with `bash`.
 
-#### Expected Benchmark Validation Results
+#### CMA Validation Reference
+
+These are previously reported organizer validation results, not measurements
+from the command above or a guarantee of identical output. Score is computed
+from full-precision metrics; the displayed component metrics are rounded.
 
 | Split | Score | SR | NE | CR | TCR |
 |:---|:---:|:---:|:---:|:---:|:---:|
-| `val_seen` | 15.47 | 0.165 | 6.230 | 0.638 | 13.271 |
-| `val_unseen` | 11.94 | 0.114 | 6.502 | 0.689 | 22.352 |
+| `val_seen` | 15.469585 | 0.165 | 6.230 | 0.638 | 13.271 |
+| `val_unseen` | 11.944822 | 0.114 | 6.502 | 0.689 | 22.352 |
+
+The native trainer reports component metrics. For the challenge's official
+Score and action replay, follow the [participant toolkit](https://github.com/F1y1113/havln-challenge).
 
 ### 4. Native Installation (Optional)
 
@@ -221,11 +243,20 @@ pip install -r requirements.txt
 
 ### 1. Matterport3D Scene Meshes (`Data/scene_datasets`)
 
-To use the simulator, download the [Matterport3D Dataset](https://niessner.github.io/Matterport/) (access required).
+Request access through the [Matterport3D dataset page](https://niessner.github.io/Matterport/):
+fill and sign its Terms of Use form and send it to `matterport3d@googlegroups.com`.
+Use the download helper supplied after approval; we do not redistribute it.
+The locally verified helper uses Python 3 and offers a Habitat scene archive:
 
 ```bash
-python2 download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
+python3 /path/to/download_mp.py -o Data/scene_datasets --task_data habitat
+# Once task-data download finishes, press Ctrl-C at the prompt for the main dataset.
+unzip Data/scene_datasets/v1/tasks/mp3d_habitat.zip -d Data/scene_datasets
 ```
+
+The final scene layout must be `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
+If the helper supplied to you is a legacy Python 2 version, use its required
+interpreter and check `--help` for its options.
 
 ### 2. HA-VLN Simulation Assets & Annotations
 
@@ -233,21 +264,27 @@ We provide two download options:
 
 #### Option A: Hugging Face Hub (Recommended)
 
-All HA-R2R navigation episodes, HAPS 2.0 3D dynamic human motions, multi-human annotations, and pretrained weights are officially hosted on [**fly1113/HA-VLN**](https://huggingface.co/datasets/fly1113/HA-VLN):
+For the validation baseline, use `scripts/download_hf.py` as shown in Quick
+Start. It verifies checksums, resumes interrupted downloads, extracts HAPS 2.0,
+and includes the public GitHub annotations required by the simulator.
+
+For the complete HA-R2R training inputs or individual HF components, use the
+[HF CLI](https://huggingface.co/docs/huggingface_hub/guides/cli) in your host
+Python environment:
 
 ```bash
 pip install huggingface-hub
-
-# 1-Click download all components into Data/
-huggingface-cli download fly1113/HA-VLN --local-dir Data --repo-type dataset
-
-# Or download individual modular components:
-# huggingface-cli download fly1113/HA-VLN --include "HA-R2R/*" --local-dir Data --repo-type dataset
-# huggingface-cli download fly1113/HA-VLN --include "HAPS2_0/*" --local-dir Data --repo-type dataset
-# huggingface-cli download fly1113/HA-VLN --include "Multi-Human-Annotations/*" --local-dir Data --repo-type dataset
-# huggingface-cli download fly1113/HA-VLN --include "ddppo-models/*" --local-dir Data --repo-type dataset
-# huggingface-cli download fly1113/HA-VLN --include "checkpoints/*" --local-dir Data --repo-type dataset
+hf download fly1113/HA-VLN --repo-type dataset --local-dir Data
+# Or select a component:
+# hf download fly1113/HA-VLN --repo-type dataset --include "HA-R2R/*" --local-dir Data
+# hf download fly1113/HA-VLN --repo-type dataset --include "checkpoints/*" --local-dir Data
 ```
+
+HF hosts HA-R2R episodes, the HAPS archive, and the CMA checkpoint. HAPS is an
+archive, not extracted GLBs; the Quick Start downloader handles extraction.
+Human annotations, collision baselines, and word embeddings are included in
+this GitHub repository. PointGoal depth-pretraining weights, when needed for
+training rather than the released CMA evaluation, use the direct link below.
 
 #### Option B: Google Drive & Direct Download (Legacy)
 
@@ -306,10 +343,12 @@ SIMULATOR:
 <summary><b>Setup GroundingDINO for Human Counting (Optional)</b></summary>
 <br>
 
-*Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and reward shaping ([HASimulator/detector.py](HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
+*Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and reward shaping ([HASimulator/detector.py](HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO. After installation, enable it with `TASK_CONFIG.SIMULATOR.HUMAN_COUNTING True` when human-count logging is wanted.*
 
 ```bash
+HA_VLN_ROOT="$(git rev-parse --show-toplevel)"
 cd "$HA_VLN_ROOT"
+python -m pip install -r requirements-dino-py38.txt
 conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
   cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
 export CUDA_HOME="$CONDA_PREFIX"
