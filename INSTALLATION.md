@@ -2,8 +2,8 @@
 
 This guide provides comprehensive instructions for deploying the **HA-VLN 2.0** environment:
 - **[1. Docker Environment (Recommended)](#1-docker-environment-recommended)**: Zero-configuration deployment with pre-built Habitat-Sim and CUDA runtime.
-- **[2. Native Conda Installation (Python 3.8 / CUDA 11.8)](#2-native-conda-installation-python-38--cuda-118---recommended)**: Standard local environment for development.
-- **[3. Dataset Acquisition & Download Options](#3-dataset-acquisition--download-options)**: Setting up Matterport3D meshes, Hugging Face assets, and alternative Google Drive mirror.
+- **[2. Native Conda Installation (Python 3.8 / CUDA 11.8)](#2-native-conda-installation-python-38--cuda-118)**: Alternative local environment if you prefer not to use Docker.
+- **[3. Dataset Acquisition](#3-dataset-acquisition)**: Setting up Matterport3D meshes, Hugging Face assets, and legacy Google Drive mirror.
 - **[4. Verification & Troubleshooting](#4-verification--troubleshooting)**: Headless rendering sanity checks and common fixes.
 
 ---
@@ -39,9 +39,51 @@ docker run --gpus all -it --rm \
 - `--shm-size 16g`: Allocates shared memory for PyTorch multi-worker dataloading and inter-process communication.
 - `--mount type=bind,...`: Dual-mounts host `Data/` to both `/workspace/HA-VLN/Data` and `/data/havln2`, satisfying both legacy and current configuration paths without manual editing.
 
+<details>
+<summary><b>Optional: Setup GroundingDINO inside Docker Container</b></summary>
+<br>
+
+*Note: GroundingDINO is only required if you explicitly enable online human detection and counting (`TASK_CONFIG.SIMULATOR.HUMAN_COUNTING: True`). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
+
+Inside the running Docker container, compile GroundingDINO with the container's CUDA 11.8 toolchain:
+
+```bash
+source /opt/conda/etc/profile.d/conda.sh
+conda activate havlnce
+cd /workspace/HA-VLN
+
+# Install CUDA development toolkit inside container
+conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
+  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
+export CUDA_HOME="$CONDA_PREFIX"
+export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
+export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
+
+# Clone and build GroundingDINO
+git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
+git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
+MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation -e HASimulator/GroundingDINO
+
+# Download pre-trained weights
+mkdir -p HASimulator/GroundingDINO/weights
+curl -fL --retry 3 \
+  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
+  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
+python -m pip check
+```
+
+</details>
+
 ---
 
-## 2. Native Conda Installation (Python 3.8 / CUDA 11.8 - Recommended)
+## 2. Native Conda Installation (Python 3.8 / CUDA 11.8)
+
+> [!NOTE]
+> **Alternative to Docker**: This native conda environment is provided only if you prefer not to use Docker. You do **not** need to deploy both environments. If you are already running via Docker, you can skip this section entirely.
+
+<details>
+<summary><b>Click to expand Native Conda Installation Guide</b></summary>
+<br>
 
 The primary local environment uses Python 3.8 and CUDA 11.8 with pre-built Habitat-Sim and Habitat-Lab pinned to **0.1.7**:
 
@@ -169,9 +211,11 @@ curl -fL --retry 3 \
 
 </details>
 
+</details>
+
 ---
 
-## 3. Dataset Acquisition & Download Options
+## 3. Dataset Acquisition
 
 All scene meshes, human activities, and baseline checkpoints reside in `Data/`.
 
@@ -189,11 +233,9 @@ Scene meshes must reside at `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
 
 ### HA-VLN Simulation Assets & Annotations
 
-We provide two download options:
+All navigation episodes, HAPS 2.0 motion meshes, multi-human annotations, and pretrained weights are officially hosted on [**Hugging Face (fly1113/HA-VLN)**](https://huggingface.co/datasets/fly1113/HA-VLN).
 
-#### Option A: Hugging Face Hub (Recommended)
-
-1-Click download and extract all validation episodes, HAPS 2.0 motions, annotations, and CMA baseline weights using the included helper script:
+Use the included helper script to download and extract all validation episodes, HAPS 2.0 motions, annotations, and CMA baseline weights in one command:
 
 ```bash
 python scripts/download_hf.py --destination Data --target all
@@ -206,15 +248,11 @@ pip install huggingface-hub
 hf download fly1113/HA-VLN --repo-type dataset --local-dir Data
 ```
 
-#### Option B: Google Drive Mirror (Alternative)
-
 <details>
-<summary>Download via Google Drive (gdown required)</summary>
+<summary><b>Legacy Google Drive Download (Backward Compatibility)</b></summary>
 <br>
 
-If you have difficulty accessing Hugging Face, simulation assets are mirrored on [Google Drive](https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing).
-
-You can download and extract the dataset using the provided bash script (requires `gdown`):
+For users relying on earlier release workflows or unable to access Hugging Face, simulation assets can also be retrieved via the legacy Google Drive mirror using `scripts/download_data.sh` (requires `gdown`):
 
 ```bash
 pip install gdown

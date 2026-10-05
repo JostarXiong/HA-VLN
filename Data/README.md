@@ -5,7 +5,7 @@ This directory houses the simulation assets, 3D motion models, navigation instru
 All dataset episodes, HAPS 2.0 motions, annotations, and pretrained models are officially hosted on Hugging Face:
 - 🚀 [**Hugging Face Dataset (fly1113/HA-VLN)**](https://huggingface.co/datasets/fly1113/HA-VLN)
 
-> 💡 *For step-by-step dataset acquisition and alternative download options (such as Google Drive mirrors), refer to the [Installation Guide](../INSTALLATION.md#3-dataset-acquisition--download-options).*
+> 💡 *For step-by-step dataset acquisition and alternative download options (such as Google Drive mirrors), refer to the [Installation Guide](../INSTALLATION.md#3-dataset-acquisition).*
 
 ---
 
