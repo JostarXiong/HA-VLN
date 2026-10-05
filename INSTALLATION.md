@@ -3,6 +3,7 @@
 This guide provides comprehensive instructions for deploying the **HA-VLN 2.0** environment. We offer two primary paths:
 1. **[Docker Environment (Recommended)](#1-docker-environment-recommended)**: Zero-configuration deployment with pre-built Habitat-Sim and CUDA runtime.
 2. **[Native Conda Installation](#2-native-conda-installation-python-38--cuda-118---recommended)**: Flexible local environment for advanced development.
+3. **[Dataset Acquisition & Download Options](#4-dataset-acquisition--download-options)**: Downloading Matterport3D meshes, Hugging Face assets, and Google Drive mirrors.
 
 ---
 
@@ -98,7 +99,63 @@ pip install -r requirements.txt
 
 ---
 
-## 4. Optional Perception Module: GroundingDINO
+## 4. Dataset Acquisition & Download Options
+
+All scene meshes, human activities, and baseline checkpoints reside in `Data/`.
+
+### Matterport3D Scene Meshes (`Data/scene_datasets`)
+
+Request access on the [Matterport3D Project Page](https://niessner.github.io/Matterport/) to receive your personal download script:
+
+```bash
+python3 /path/to/download_mp.py -o Data/scene_datasets --task_data habitat
+# After task-data download finishes, press Ctrl-C at the prompt for the main dataset.
+unzip Data/scene_datasets/v1/tasks/mp3d_habitat.zip -d Data/scene_datasets
+```
+
+Scene meshes must reside at `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
+
+### HA-VLN Simulation Assets & Annotations
+
+We provide two download options:
+
+#### Option A: Hugging Face Hub (Recommended)
+
+1-Click download and extract all validation episodes, HAPS 2.0 motions, annotations, and CMA baseline weights using the included helper script:
+
+```bash
+python scripts/download_hf.py --destination Data --target all
+```
+
+Or download individual components using the official [Hugging Face Hub CLI](https://huggingface.co/docs/huggingface_hub/guides/cli):
+
+```bash
+pip install huggingface-hub
+hf download fly1113/HA-VLN --repo-type dataset --local-dir Data
+```
+
+#### Option B: Google Drive Mirror (Alternative)
+
+<details>
+<summary>Download via Google Drive (gdown required)</summary>
+<br>
+
+If you have difficulty accessing Hugging Face, simulation assets are mirrored on [Google Drive](https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing).
+
+You can download and extract the dataset using the provided bash script (requires `gdown`):
+
+```bash
+pip install gdown
+bash scripts/download_data.sh
+```
+
+Pretrained PointGoal ResNet depth observation weights can also be downloaded directly from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extracted to `Data/ddppo-models/{model}.pth`.
+
+</details>
+
+---
+
+## 5. Optional Perception Module: GroundingDINO
 
 *Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and human counting ([HASimulator/detector.py](HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
 
@@ -144,7 +201,7 @@ curl -fL --retry 3 \
 
 ---
 
-## 5. Building Headless Habitat-Sim from Source (C++ / EGL)
+## 6. Building Headless Habitat-Sim from Source (C++ / EGL)
 
 If you require custom Habitat-Sim modifications or pre-built binaries fail on your distribution:
 
@@ -161,7 +218,7 @@ python setup.py install --headless
 
 ---
 
-## 6. Verification & Troubleshooting
+## 7. Verification & Troubleshooting
 
 Run the following sanity checks to verify that headless GPU rendering and PyTorch CUDA extensions operate properly:
 

@@ -2,8 +2,10 @@
 
 This directory houses the simulation assets, 3D motion models, navigation instructions, and baseline weights for the **HA-VLN 2.0** benchmark.
 
-- 🚀 [**Download via Hugging Face**](https://huggingface.co/datasets/fly1113/HA-VLN)
-- 📦 [**Download via Google Drive**](https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing)
+All dataset episodes, HAPS 2.0 motions, annotations, and pretrained models are officially hosted on Hugging Face:
+- 🚀 [**Hugging Face Dataset (fly1113/HA-VLN)**](https://huggingface.co/datasets/fly1113/HA-VLN)
+
+> 💡 *For step-by-step dataset acquisition and alternative download options (such as Google Drive mirrors), refer to the [Installation Guide](../INSTALLATION.md#4-dataset-acquisition--download-options).*
 
 ---
 
