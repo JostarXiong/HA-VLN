@@ -193,6 +193,35 @@ cd "$HA_VLN_ROOT"
 
 </details>
 
+<details>
+<summary>Optional: Setup GroundingDINO for Human Counting API</summary>
+<br>
+
+*Note: GroundingDINO is only required if you explicitly enable online human detection and counting (`TASK_CONFIG.SIMULATOR.HUMAN_COUNTING: True`). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
+
+```bash
+cd "$HA_VLN_ROOT"
+python -m pip install -r requirements-dino-py38.txt
+conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
+  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
+export CUDA_HOME="$CONDA_PREFIX"
+export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
+export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
+
+git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
+git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
+MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
+  -e HASimulator/GroundingDINO
+
+mkdir -p HASimulator/GroundingDINO/weights
+curl -fL --retry 3 \
+  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
+  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
+python -m pip check
+```
+
+</details>
+
 </details>
 
 <details>
@@ -216,6 +245,29 @@ cd $(git rev-parse --show-toplevel)
 pip install torch==1.9.1+cu111 torchvision==0.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 pip install -r requirements.txt
 ```
+
+<details>
+<summary>Optional: Setup GroundingDINO for Human Counting API</summary>
+<br>
+
+*Note: GroundingDINO is only required if you explicitly enable online human detection and counting (`TASK_CONFIG.SIMULATOR.HUMAN_COUNTING: True`). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
+
+```bash
+cd HASimulator
+git clone https://github.com/IDEA-Research/GroundingDINO.git
+cd GroundingDINO/
+# modify requirements.txt to set supervision==0.11.1
+export CUDA_HOME=/usr/local/cuda
+pip install -e .
+
+mkdir -p weights
+curl -fL --retry 3 \
+  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
+  -o weights/groundingdino_swint_ogc.pth
+cd $(git rev-parse --show-toplevel)
+```
+
+</details>
 
 </details>
 
@@ -314,54 +366,7 @@ SIMULATOR:
   RECOMPUTE_NAVMESH_PATH: ../Data/recompute_navmesh
 ```
 
-<details>
-<summary><b>Setup GroundingDINO for Human Counting (Optional)</b></summary>
-<br>
-
-*Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and reward shaping ([HASimulator/detector.py](HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO. After installation, enable it with `TASK_CONFIG.SIMULATOR.HUMAN_COUNTING True` when human-count logging is wanted.*
-
-#### For Python 3.8 (Recommended)
-
-```bash
-HA_VLN_ROOT="$(git rev-parse --show-toplevel)"
-cd "$HA_VLN_ROOT"
-python -m pip install -r requirements-dino-py38.txt
-conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
-  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
-export CUDA_HOME="$CONDA_PREFIX"
-export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
-export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
-
-git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
-git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
-MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
-  -e HASimulator/GroundingDINO
-
-mkdir -p HASimulator/GroundingDINO/weights
-curl -fL --retry 3 \
-  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
-  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
-python -m pip check
-```
-
-#### For Legacy Python 3.7
-
-```bash
-cd HASimulator
-git clone https://github.com/IDEA-Research/GroundingDINO.git
-cd GroundingDINO/
-# modify requirements.txt to set supervision==0.11.1
-export CUDA_HOME=/usr/local/cuda
-pip install -e .
-
-mkdir -p weights
-curl -fL --retry 3 \
-  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
-  -o weights/groundingdino_swint_ogc.pth
-cd $(git rev-parse --show-toplevel)
-```
-
-</details>
+To additionally enable online human detection, counting, and observation logging via GroundingDINO, set `HUMAN_COUNTING: True` in the task config. Note that GroundingDINO is an optional perception module; standard navigation policies (such as HA-VLN-CMA) do not require it. For environment-specific installation, see the optional GroundingDINO setup in [Native Installation](#-quick-start).
 
 ---
 
