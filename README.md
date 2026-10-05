@@ -337,10 +337,13 @@ hf download fly1113/HA-VLN --repo-type dataset --local-dir Data
 HF hosts HA-R2R episodes, the HAPS archive, and the CMA checkpoint. HAPS is an
 archive, not extracted GLBs; the Quick Start downloader handles extraction.
 Human annotations, collision baselines, and word embeddings are included in
-this GitHub repository. PointGoal depth-pretraining weights, when needed for
-training rather than the released CMA evaluation, use the direct link below.
+this GitHub repository. For training policies from scratch rather than evaluating
+the released CMA checkpoint, download the pretrained PointGoal ResNet depth
+observation weights directly from
+[ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip)
+and extract them to `Data/ddppo-models/{model}.pth` (default: `gibson-2plus-resnet50.pth`).
 
-#### Option B: Google Drive & Direct Download (Legacy)
+#### Option B: Google Drive (Legacy)
 
 <details>
 <summary>Download via script (Google Drive, gdown required)</summary>
@@ -351,8 +354,6 @@ To download and extract HA-R2R and HAPS 2.0 datasets via Google Drive, simply ru
 ```bash
 bash scripts/download_data.sh
 ```
-
-Pretrained PointGoal ResNet depth observation weights can also be downloaded directly from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extracted to `Data/ddppo-models/{model}.pth`.
 
 </details>
 
