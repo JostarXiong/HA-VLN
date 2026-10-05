@@ -320,6 +320,8 @@ SIMULATOR:
 
 *Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and reward shaping ([HASimulator/detector.py](HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO. After installation, enable it with `TASK_CONFIG.SIMULATOR.HUMAN_COUNTING True` when human-count logging is wanted.*
 
+#### For Python 3.8 (Recommended)
+
 ```bash
 HA_VLN_ROOT="$(git rev-parse --show-toplevel)"
 cd "$HA_VLN_ROOT"
@@ -340,6 +342,23 @@ curl -fL --retry 3 \
   https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
   -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
 python -m pip check
+```
+
+#### For Legacy Python 3.7
+
+```bash
+cd HASimulator
+git clone https://github.com/IDEA-Research/GroundingDINO.git
+cd GroundingDINO/
+# modify requirements.txt to set supervision==0.11.1
+export CUDA_HOME=/usr/local/cuda
+pip install -e .
+
+mkdir -p weights
+curl -fL --retry 3 \
+  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
+  -o weights/groundingdino_swint_ogc.pth
+cd $(git rev-parse --show-toplevel)
 ```
 
 </details>
