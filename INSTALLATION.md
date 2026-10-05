@@ -1,9 +1,10 @@
 # Environment Setup & Installation Guide
 
-This guide provides comprehensive instructions for deploying the **HA-VLN 2.0** environment. We offer two primary paths:
-1. **[Docker Environment (Recommended)](#1-docker-environment-recommended)**: Zero-configuration deployment with pre-built Habitat-Sim and CUDA runtime.
-2. **[Native Conda Installation](#2-native-conda-installation-python-38--cuda-118---recommended)**: Flexible local environment for advanced development.
-3. **[Dataset Acquisition & Download Options](#4-dataset-acquisition--download-options)**: Downloading Matterport3D meshes, Hugging Face assets, and Google Drive mirrors.
+This guide provides comprehensive instructions for deploying the **HA-VLN 2.0** environment:
+- **[1. Docker Environment (Recommended)](#1-docker-environment-recommended)**: Zero-configuration deployment with pre-built Habitat-Sim and CUDA runtime.
+- **[2. Native Conda Installation (Python 3.8 / CUDA 11.8)](#2-native-conda-installation-python-38--cuda-118---recommended)**: Standard local environment for development.
+- **[3. Dataset Acquisition & Download Options](#3-dataset-acquisition--download-options)**: Setting up Matterport3D meshes, Hugging Face assets, and alternative Google Drive mirror.
+- **[4. Verification & Troubleshooting](#4-verification--troubleshooting)**: Headless rendering sanity checks and common fixes.
 
 ---
 
@@ -42,7 +43,7 @@ docker run --gpus all -it --rm \
 
 ## 2. Native Conda Installation (Python 3.8 / CUDA 11.8 - Recommended)
 
-The following Linux setup uses Python 3.8 and CUDA 11.8 PyTorch stack. Habitat-Sim and Habitat-Lab are pinned to **0.1.7**:
+The primary local environment uses Python 3.8 and CUDA 11.8 with pre-built Habitat-Sim and Habitat-Lab pinned to **0.1.7**:
 
 ```bash
 HA_VLN_ROOT="$(pwd)"
@@ -71,9 +72,57 @@ python setup.py develop --all
 cd "$HA_VLN_ROOT"
 ```
 
----
+<details>
+<summary><b>Build Headless Habitat-Sim from Source (C++ / EGL Fallback)</b></summary>
+<br>
 
-## 3. Legacy Python 3.7 Native Installation
+If you require custom Habitat-Sim modifications or pre-built conda binaries fail on your distribution:
+
+```bash
+git clone --branch v0.1.7 https://github.com/facebookresearch/habitat-sim.git
+cd habitat-sim
+
+sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+  libjpeg-dev libglm-dev libgl1-mesa-glx libegl1-mesa-dev mesa-utils xorg-dev freeglut3-dev
+
+pip install -r requirements.txt
+python setup.py install --headless
+```
+
+</details>
+
+<details>
+<summary><b>Setup GroundingDINO for Human Counting (Optional)</b></summary>
+<br>
+
+*Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and human counting ([HASimulator/detector.py](HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
+
+```bash
+cd "$HA_VLN_ROOT"
+conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
+  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
+export CUDA_HOME="$CONDA_PREFIX"
+export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
+export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
+export PATH="$CUDA_HOME/bin:$PATH"
+
+git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
+git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
+MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
+  -e HASimulator/GroundingDINO
+
+mkdir -p HASimulator/GroundingDINO/weights
+curl -fL --retry 3 \
+  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
+  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
+python -m pip check
+```
+
+</details>
+
+<details>
+<summary><b>Legacy Python 3.7 Native Environment</b></summary>
+<br>
 
 These commands retain the original software stack for historical reference. Please install `habitat-sim` before installing `habitat-lab`:
 
@@ -97,9 +146,32 @@ pip install torch==1.9.1+cu111 torchvision==0.10.1+cu111 -f https://download.pyt
 pip install -r requirements.txt
 ```
 
+<details>
+<summary><b>Setup GroundingDINO for Python 3.7 (Optional)</b></summary>
+<br>
+
+```bash
+cd "$HA_VLN_ROOT"
+python -m pip install "supervision==0.11.1" "addict==2.4.0" "yapf==0.40.2" "timm==0.9.12"
+git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
+git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
+sed -i 's/supervision==[0-9.]*/supervision==0.11.1/' HASimulator/GroundingDINO/requirements.txt
+export CUDA_HOME=/usr/local/cuda
+python -m pip install --no-deps -e HASimulator/GroundingDINO
+
+mkdir -p HASimulator/GroundingDINO/weights
+curl -fL --retry 3 \
+  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
+  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
+```
+
+</details>
+
+</details>
+
 ---
 
-## 4. Dataset Acquisition & Download Options
+## 3. Dataset Acquisition & Download Options
 
 All scene meshes, human activities, and baseline checkpoints reside in `Data/`.
 
@@ -155,70 +227,7 @@ Pretrained PointGoal ResNet depth observation weights can also be downloaded dir
 
 ---
 
-## 5. Optional Perception Module: GroundingDINO
-
-*Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and human counting ([HASimulator/detector.py](HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO.*
-
-### Installation for Python 3.8 Environment
-
-```bash
-cd "$HA_VLN_ROOT"
-conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
-  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
-export CUDA_HOME="$CONDA_PREFIX"
-export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
-export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
-export PATH="$CUDA_HOME/bin:$PATH"
-
-git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
-git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
-MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
-  -e HASimulator/GroundingDINO
-
-mkdir -p HASimulator/GroundingDINO/weights
-curl -fL --retry 3 \
-  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
-  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
-python -m pip check
-```
-
-### Installation for Python 3.7 Environment
-
-```bash
-cd "$HA_VLN_ROOT"
-python -m pip install "supervision==0.11.1" "addict==2.4.0" "yapf==0.40.2" "timm==0.9.12"
-git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
-git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
-sed -i 's/supervision==[0-9.]*/supervision==0.11.1/' HASimulator/GroundingDINO/requirements.txt
-export CUDA_HOME=/usr/local/cuda
-python -m pip install --no-deps -e HASimulator/GroundingDINO
-
-mkdir -p HASimulator/GroundingDINO/weights
-curl -fL --retry 3 \
-  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
-  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
-```
-
----
-
-## 6. Building Headless Habitat-Sim from Source (C++ / EGL)
-
-If you require custom Habitat-Sim modifications or pre-built binaries fail on your distribution:
-
-```bash
-git clone --branch v0.1.7 https://github.com/facebookresearch/habitat-sim.git
-cd habitat-sim
-
-sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-  libjpeg-dev libglm-dev libgl1-mesa-glx libegl1-mesa-dev mesa-utils xorg-dev freeglut3-dev
-
-pip install -r requirements.txt
-python setup.py install --headless
-```
-
----
-
-## 7. Verification & Troubleshooting
+## 4. Verification & Troubleshooting
 
 Run the following sanity checks to verify that headless GPU rendering and PyTorch CUDA extensions operate properly:
 

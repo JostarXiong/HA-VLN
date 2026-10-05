@@ -82,7 +82,7 @@ TASK:
 
 Online human detection and counting relies on GroundingDINO:
 1. Set `HUMAN_COUNTING: True` under `SIMULATOR` in [`config/HAVLNCE_task.yaml`](config/HAVLNCE_task.yaml).
-2. Install GroundingDINO and download pre-trained weights by following the instructions in [INSTALLATION.md](../INSTALLATION.md#4-optional-perception-module-groundingdino).
+2. Install GroundingDINO and download pre-trained weights by following the instructions in [INSTALLATION.md](../INSTALLATION.md#2-native-conda-installation-python-38--cuda-118---recommended).
 
 ---
 
