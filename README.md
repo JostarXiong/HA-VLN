@@ -32,6 +32,9 @@
   <a href="https://drive.google.com/drive/folders/1WrdsRSPp-xJkImZ3CnI7Ho90lnhzp5GR?usp=sharing" target="_blank">
     <img src="https://img.shields.io/badge/Googledrive-dataset-purple">
   </a>
+  <a href="https://f1y1113.github.io/havln-challenge/" target="_blank">
+    <img src="https://img.shields.io/badge/Challenge-RoboWorld2026-orange">
+  </a>
   <a href="https://github.com/UWMILab/HA-VLN/blob/main/LICENSE" target="_blank">
     <img src="https://img.shields.io/badge/License-MIT-green">
   </a>

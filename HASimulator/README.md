@@ -20,6 +20,11 @@ The simulation engine coordinates real-time dynamic human mesh insertion, physic
 
 ## 2. Real-Time Human Rendering Engine
 
+<div align="center">
+  <img src="../demo/gifs/havln.gif" alt="HA-VLN Simulator Multi-Human Dynamic Rendering" width="700"/>
+  <p><em>Real-time dynamic multi-human rendering and motion simulation within HA-VLN Simulator.</em></p>
+</div>
+
 Human Rendering is implemented in the class **`HAVLNCE`** of [`environments.py`](environments.py).
 
 ### Multi-Threading Execution Model
@@ -118,6 +123,11 @@ python3 human_scene_fusion.py
 ```
 
 Resulting inspection images and videos are written to `scripts/test/` by default.
+
+<div align="center">
+  <img src="../demo/figs/overview_example-1.png" alt="Overall View of Nine Annotated Scenarios" width="700"/>
+  <p><em>Overall view of 9 annotated architectural scenarios from the HA-VLN Simulator (across 90 scans in total).</em></p>
+</div>
 
 ---
 

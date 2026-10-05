@@ -61,6 +61,18 @@ where:
 - $72$ represents the pose rotation parameters ($\theta$).
 - $6890 \times 3$ represents the 3D coordinates of all mesh vertices per frame.
 
+### Dynamic Motion Sequence Demos
+
+The dataset provides 486 dynamic 3D human motions generated via MDM with natural physical interactions (e.g., walking, searching, conversation, dancing):
+
+| Motion Demo 1 | Motion Demo 2 | Motion Demo 3 |
+|:---:|:---:|:---:|
+| <img src="../demo/gifs/demo_1.gif" width="230"/> | <img src="../demo/gifs/demo_2.gif" width="230"/> | <img src="../demo/gifs/demo_3.gif" width="230"/> |
+
+| Motion Demo 4 | Motion Demo 5 | Motion Demo 6 |
+|:---:|:---:|:---:|
+| <img src="../demo/gifs/demo_4.gif" width="230"/> | <img src="../demo/gifs/demo_5.gif" width="230"/> | <img src="../demo/gifs/demo_6.gif" width="230"/> |
+
 ---
 
 ## 4. HA-R2R Dataset (Human-Aware Room-to-Room)
