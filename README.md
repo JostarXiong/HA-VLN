@@ -43,10 +43,10 @@
 
 ## 🧭 What does HA-VLN 2.0 look like?
 
-Navigation Demo 1|Navigation Demo 2
---|--
-<img src="demo/gifs/nav1.gif" width="350">|<img src="demo/gifs/nav2.gif" width="350">
-**Navigation Instruction**: Start by moving forward in the lounge area, **where an individual is engaged in a phone conversation while pacing back and forth**. Navigate carefully to avoid crossing their path. As you proceed, you will pass by a television mounted on the wall. Continue your movement, **observing people relaxing and watching the TV, some seated comfortably on sofas**. Further along, **notice a group of friends raising their glasses in a toast, enjoying cocktails together**. Maintain a steady course, ensuring you do not disrupt their gathering. Finally, reach the end of your path where a potted plant is situated next to a door. Stop at this location, positioning yourself near the plant and door without obstructing access.|**Navigation Instruction**: Exit the room and make a left turn. Proceed down the hallway **where an individual is ironing clothes, carefully smoothing out wrinkles on garments**. Continue walking and make another left turn. Enter the next room, which is a bedroom. Inside, **someone is comfortably seated in bed, engrossed in reading a book**. Move past the bed, ensuring not to disturb the reader. Turn left again to enter the bathroom. Once inside, position yourself near the sink and wait there, observing the surroundings without interfering with any activities.
+| Navigation Demo 1 | Navigation Demo 2 |
+|---|---|
+| <img src="demo/gifs/nav1.gif" width="350"> | <img src="demo/gifs/nav2.gif" width="350"> |
+| <details><summary><b>Navigation Instruction:</b> Start by moving forward in the lounge area, <b>where an individual is engaged in a phone conversation while pacing back and forth</b>. Navigate carefully to avoid crossing their path... <i>(Click to expand)</i></summary><br>As you proceed, you will pass by a television mounted on the wall. Continue your movement, <b>observing people relaxing and watching the TV, some seated comfortably on sofas</b>. Further along, <b>notice a group of friends raising their glasses in a toast, enjoying cocktails together</b>. Maintain a steady course, ensuring you do not disrupt their gathering. Finally, reach the end of your path where a potted plant is situated next to a door. Stop at this location, positioning yourself near the plant and door without obstructing access.</details> | <details><summary><b>Navigation Instruction:</b> Exit the room and make a left turn. Proceed down the hallway <b>where an individual is ironing clothes, carefully smoothing out wrinkles on garments</b>. Continue walking and make another left turn... <i>(Click to expand)</i></summary><br>Enter the next room, which is a bedroom. Inside, <b>someone is comfortably seated in bed, engrossed in reading a book</b>. Move past the bed, ensuring not to disturb the reader. Turn left again to enter the bathroom. Once inside, position yourself near the sink and wait there, observing the surroundings without interfering with any activities.</details> |
 
 If you find this repository or our paper useful, please consider **starring** this repository and **citing** our paper. You are also welcome to explore our other recent works towards world modeling in navigation, including [**UniWM**](https://github.com/F1y1113/UniWM) and [**GOViG**](https://github.com/F1y1113/GoViG),
 ```bibtex
@@ -72,8 +72,9 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
   - [🚀 Quick Start](#-quick-start)
   - [📥 Download Dataset](#-download-dataset)
   - [🔄 Dataset Organization](#-dataset-organization)
-  - [🌆 Human-Scene Fusion](#-human-scene-fusion)
   - [🖥️ Real-time Human Rendering](#-real-time-human-rendering)
+  - [🌆 Human-Scene Fusion](#-human-scene-fusion)
+  - [🌆 Navigate within a Scene Yourself](#-navigate-within-a-scene-yourself)
   - [📊 Training](#-training)
   - [📈 Visualization](#-visualization)
   - [📂 Dataset Details](#-dataset-details)
@@ -81,28 +82,47 @@ We present Human-Aware Vision-and-Language Navigation (**HA-VLN**), expanding VL
 ---
 
 ## 🚀 Quick Start
+
+In this section, you will download the necessary datasets and deploy the essential environment within Docker. Then, you can reproduce our proposed HA-VLN-CMA baseline model and observe its benchmark performance.
+
+### 1. Clone Repository
+
 ```bash
-git clone https://github.com/F1y1113/HA-VLN.git
+git clone https://github.com/UWMILab/HA-VLN.git
 cd HA-VLN
 ```
 
-### Docker Environment (Recommended)
+### 2. Download Datasets & Checkpoint
 
-Use our pre-built Docker environment with Python 3.8, PyTorch, CUDA 11.8,
-and Habitat-Sim/Habitat-Lab 0.1.7. Install Docker and the NVIDIA Container
-Toolkit on your host, then pull the image:
+Install Docker and the NVIDIA Container Toolkit on a Linux host with an NVIDIA
+GPU. The image supplies Python 3.8, CUDA 11.8, and Habitat 0.1.7:
 
 ```bash
-IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:e1a0544f66beaf5218cc9df63da51b4a1a22a6bf0471ca0c2f75e81ee02a6556
+IMAGE=ghcr.io/jostarxiong/havln-challenge-2026@sha256:78a62cd176d2fd7d0e2825f4cb5be2488ebc5f1a354649b7b4f536a98f1054f4
 docker pull "$IMAGE"
+
+# Download validation episodes and CMA weights, and extract HAPS 2.0.
+# Small human/collision annotations come from the pinned public GitHub release.
+docker run --rm \
+  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
+  --workdir /workspace/HA-VLN \
+  "$IMAGE" python scripts/download_hf.py --destination Data --target all
 ```
 
-Prepare the datasets following [Download Dataset](#-download-dataset).
-From the HA-VLN repository root, set `DATA_DIR` to the absolute path of your
-existing dataset directory and start an interactive container:
+Matterport3D scene meshes must be obtained separately under its license from
+[the official dataset page](https://niessner.github.io/Matterport/). Place the
+extracted scenes at `Data/scene_datasets/mp3d/<scan>/<scan>.glb` before evaluation.
+The repository does not include Matterport3D's `download_mp.py` helper.
+
+### 3. Reproduce Baseline with Docker
+
+From the repository root, prepare the released checkpoint and start evaluation:
 
 ```bash
-DATA_DIR="/absolute/path/to/Data"
+mkdir -p agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune
+cp Data/checkpoints/HA-VLN-CMA/ckpt.39.pth \
+  agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/CMA_PM_DA_Aug.pth
+DATA_DIR="$(cd Data && pwd -P)"
 
 docker run --gpus all -it --rm \
   --shm-size 16g \
@@ -110,26 +130,41 @@ docker run --gpus all -it --rm \
   --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
   --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
   --workdir /workspace/HA-VLN \
-  "$IMAGE" bash
+  "$IMAGE" bash -lc 'bash scripts/setup_docker_cma.sh && cd agent &&
+    python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval \
+      MODEL.DEPTH_ENCODER.ddppo_checkpoint NONE VIDEO_OPTION "[]"'
 ```
 
-The shell opens in your mounted repository. The same dataset directory is
-available through the repository's `Data/` and `/data/havln2` paths.
-Code and data changes persist on the host; packages installed only inside
-this temporary container are removed when it exits.
+The setup script installs CMA dependencies inside the container while preserving
+the image's Habitat core. It requires internet access and runs again when a new
+container is started. The released CMA checkpoint already contains the depth
+encoder weights, so a separate PointGoal checkpoint is unnecessary for this
+validation run. GroundingDINO human counting is disabled by default.
+Results are written to `agent/VLN-CE/data/checkpoints/cma_pm_da_aug_tune/evals/`.
+To evaluate `val_seen`, append `EVAL.SPLIT val_seen` to the Python command.
+For an interactive shell, replace the final `bash -lc ...` command with `bash`.
 
-### Native Installation
+#### CMA Validation Reference
 
-#### Python 3.8 (Recommended)
+These are previously reported organizer validation results, not measurements
+from the command above or a guarantee of identical output. Score is computed
+from full-precision metrics; the displayed component metrics are rounded.
 
-The following Linux setup uses Python 3.8 and the CUDA 11.8 PyTorch stack.
-Keep Habitat-Sim and Habitat-Lab at **0.1.7**. A compatible NVIDIA driver is
-required; the pre-built simulator does not require a local CUDA compiler.
-The pre-built route and a short CMA rollout have been tested on NVIDIA A100.
+| Split | Score | SR | NE | CR | TCR |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| `val_seen` | 15.469585 | 0.165 | 6.230 | 0.638 | 13.271 |
+| `val_unseen` | 11.944822 | 0.114 | 6.502 | 0.689 | 22.352 |
 
-##### 1. Habitat Simulator Setup
+The native trainer reports component metrics. For the challenge's official
+Score and action replay, follow the [participant toolkit](https://github.com/F1y1113/havln-challenge).
 
-Run these commands from the HA-VLN repository root:
+### 4. Native Installation (Optional)
+
+<details>
+<summary><b>Native Conda Setup (Python 3.8 / CUDA 11.8)</b></summary>
+<br>
+
+The following Linux setup uses Python 3.8 and the CUDA 11.8 PyTorch stack. Keep Habitat-Sim and Habitat-Lab at **0.1.7**:
 
 ```bash
 HA_VLN_ROOT="$(pwd)"
@@ -149,23 +184,18 @@ python -m pip install -c requirements-py38.txt \
   tensorboard moviepy webdataset ifcfg msgpack_numpy
 python -m pip install --no-deps --no-build-isolation -e habitat-lab
 
-# Prefer this environment's C++ runtime and headless OpenGL libraries.
+# Agent dependencies
+python -m pip install -r requirements-py38.txt
+
 export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
 export DISPLAY=""
 export EGL_DEVICE_ID=0
 ```
 
-For Python 3.8, use `requirements-py38.txt` as the compatibility constraints
-instead of installing the legacy Habitat-Baselines RL or agent requirements.
-The pinned Gym version avoids the old VLN sensor's `Discrete(0)` incompatibility.
-Prepare scene and human assets using [Download Dataset](#-download-dataset).
-
 <details>
 <summary>Alternative: build Habitat-Sim 0.1.7 from source</summary>
 
-Use this **instead of** the pre-built Habitat-Sim installation above if you
-need to modify the simulator's C++ code. Install the system build libraries,
-then use the same Python 3.8 environment and compatibility constraints:
+Use this **instead of** the pre-built Habitat-Sim installation above if you need to modify the simulator's C++ code:
 
 ```bash
 sudo apt-get update
@@ -182,96 +212,28 @@ cd "$HA_VLN_ROOT"
 
 </details>
 
-##### 2. CMA Agent Setup
-
-To run the supplied CMA trainer, install the agent dependencies and its
-GroundingDINO detector. The CUDA compiler must match the PyTorch CUDA version:
-
-```bash
-cd "$HA_VLN_ROOT"
-conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
-  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
-export CUDA_HOME="$CONDA_PREFIX"
-export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
-export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
-
-python -m pip install -r requirements-py38.txt
-git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
-git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
-MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
-  -e HASimulator/GroundingDINO
-
-mkdir -p HASimulator/GroundingDINO/weights
-curl -fL --retry 3 \
-  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
-  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
-python -m pip check
-```
-
-If GroundingDINO is already checked out, skip its clone command. TensorFlow
-is included because the current CMA trainer imports it; TensorBoard alone
-is not a replacement. Follow [Training](#-training) for model execution and
-prepare the encoder weights described in [Download Dataset](#-download-dataset).
-
-#### Legacy Python 3.7
-
 <details>
-<summary>Original installation instructions (historical reference)</summary>
+<summary>Legacy Python 3.7 Environment (Historical Reference)</summary>
 
-These commands retain the original software stack; they are not the recommended
-Python 3.8 installation route. Choose either the Conda or source Habitat-Sim
-installation, not both, and use a separate environment from the setup above.
+These commands retain the original software stack for historical reference. Please install `habitat-lab` (v0.1.7) and `habitat-sim` (v0.1.7) following [ETPNav](https://github.com/MarSaKi/ETPNav/) (note that this uses `python==3.7`):
 
-Set up a Conda environment for the simulator.
-Please install habitat-lab (v0.1.7) and habitat-sim (v0.1.7) follow [ETPNav](https://github.com/MarSaKi/ETPNav/) (please note that we use python==3.7).
 ```bash
 conda create -n havlnce python=3.7
 conda activate havlnce
-
-# install habitat-sim via conda or install habitat-sim from source
-# conda
 conda install -c aihabitat -c conda-forge habitat-sim=0.1.7 headless
-# source
-git clone --branch v0.1.7 https://github.com/facebookresearch/habitat-sim.git
-cd habitat-sim
-pip install -r requirements.txt
-sudo apt-get update || true
-sudo apt-get install -y --no-install-recommends \
-     libjpeg-dev libglm-dev libgl1-mesa-glx libegl1-mesa-dev mesa-utils xorg-dev freeglut3-dev
-python setup.py install --headless
-
-cd ..
-
 git clone --branch v0.1.7 https://github.com/facebookresearch/habitat-lab.git
 cd habitat-lab
 pip install -r requirements.txt
 pip install -r habitat_baselines/rl/requirements.txt
-python setup.py develop --all # install habitat and habitat_baselines
+python setup.py develop --all
 cd $(git rev-parse --show-toplevel)
-```
 
-And follow [GroundingDINO](https://github.com/IDEA-Research/GroundingDINO/) to install GroundingDINO (please note that we use supervision==0.11.1).
-
-```bash
-cd HASimulator
-git clone https://github.com/IDEA-Research/GroundingDINO.git
-cd GroundingDINO/
-# modify supervision==0.11.1
-vim requirements.txt
-export CUDA_HOME=/usr/local/cuda
-pip install -e .
-
-mkdir weights
-cd weights
-wget -q https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
-cd $(git rev-parse --show-toplevel)
-```
-Finally, you should install necessary packages for agent.
-
-```bash
+# Agent packages (Python 3.7)
 pip install torch==1.9.1+cu111 torchvision==0.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 pip install -r requirements.txt
 ```
+
+</details>
 
 </details>
 
@@ -279,18 +241,66 @@ pip install -r requirements.txt
 
 ## 📥 Download Dataset
 
-To use the simulator, download the [Matterport3D Dataset](https://niessner.github.io/Matterport/) (access required).
+### 1. Matterport3D Scene Meshes (`Data/scene_datasets`)
+
+Request access through the [Matterport3D dataset page](https://niessner.github.io/Matterport/):
+fill and sign its Terms of Use form and send it to `matterport3d@googlegroups.com`.
+Use the download helper supplied after approval; we do not redistribute it.
+The locally verified helper uses Python 3 and offers a Habitat scene archive:
 
 ```bash
-python2 download_mp.py -o Data/scene_datasets --type matterport_mesh house_segmentations region_segmentations poisson_meshes
+python3 /path/to/download_mp.py -o Data/scene_datasets --task_data habitat
+# Once task-data download finishes, press Ctrl-C at the prompt for the main dataset.
+unzip Data/scene_datasets/v1/tasks/mp3d_habitat.zip -d Data/scene_datasets
 ```
 
-To download and extract HA-R2R and HAPS 2.0 datasets, simply run (gdown required):
+The final scene layout must be `Data/scene_datasets/mp3d/<scan>/<scan>.glb`.
+If the helper supplied to you is a legacy Python 2 version, use its required
+interpreter and check `--help` for its options.
+
+### 2. HA-VLN Simulation Assets & Annotations
+
+We provide two download options:
+
+#### Option A: Hugging Face Hub (Recommended)
+
+For the validation baseline, use `scripts/download_hf.py` as shown in Quick
+Start. It verifies checksums, resumes interrupted downloads, extracts HAPS 2.0,
+and includes the public GitHub annotations required by the simulator.
+
+For the complete HA-R2R training inputs or individual HF components, use the
+[HF CLI](https://huggingface.co/docs/huggingface_hub/guides/cli) in your host
+Python environment:
+
+```bash
+pip install huggingface-hub
+hf download fly1113/HA-VLN --repo-type dataset --local-dir Data
+# Or select a component:
+# hf download fly1113/HA-VLN --repo-type dataset --include "HA-R2R/*" --local-dir Data
+# hf download fly1113/HA-VLN --repo-type dataset --include "checkpoints/*" --local-dir Data
+```
+
+HF hosts HA-R2R episodes, the HAPS archive, and the CMA checkpoint. HAPS is an
+archive, not extracted GLBs; the Quick Start downloader handles extraction.
+Human annotations, collision baselines, and word embeddings are included in
+this GitHub repository. PointGoal depth-pretraining weights, when needed for
+training rather than the released CMA evaluation, use the direct link below.
+
+#### Option B: Google Drive & Direct Download (Legacy)
+
+<details>
+<summary>Download via script (Google Drive, gdown required)</summary>
+<br>
+
+To download and extract HA-R2R and HAPS 2.0 datasets via Google Drive, simply run:
 
 ```bash
 bash scripts/download_data.sh
 ```
-Baseline models encode depth observations using a ResNet pre-trained on PointGoal navigation. Those weights can be downloaded from [here](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip). Extract the contents to [Data/ddppo-models](Data/ddppo-models)/{model}.pth.
+
+Pretrained PointGoal ResNet depth observation weights can also be downloaded directly from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extracted to `Data/ddppo-models/{model}.pth`.
+
+</details>
 
 ---
 
@@ -313,6 +323,54 @@ Baseline models encode depth observations using a ResNet pre-trained on PointGoa
 
 ---
 
+## 🖥️ Real-time Human Rendering
+
+Human Rendering is defined in the class **HAVLNCE** of [HASimulator/environments.py](HASimulator/environments.py).
+
+Human Rendering uses child threads for timing and the main thread for adding / removing human models and recalculating the required navmesh in real time.
+
+In the first use, the navmesh will be automatically calculated and saved to support operations such as collision calculation, and the subsequent use will directly load the previously generated navmesh. To enable human rendering, modify the following settings in [HAVLN-CE task config](HASimulator/config/HAVLNCE_task.yaml):
+
+```yaml
+SIMULATOR:
+  ADD_HUMAN: True
+  HUMAN_GLB_PATH: ../Data/HAPS2_0
+  HUMAN_INFO_PATH: ../Data/Multi-Human-Annotations/human_motion.json
+  RECOMPUTE_NAVMESH_PATH: ../Data/recompute_navmesh
+```
+
+<details>
+<summary><b>Setup GroundingDINO for Human Counting (Optional)</b></summary>
+<br>
+
+*Note: GroundingDINO is an optional simulator perception module for online human detection, observation logging, and reward shaping ([HASimulator/detector.py](HASimulator/detector.py)). Standard navigation policies (such as HA-VLN-CMA) do not require GroundingDINO. After installation, enable it with `TASK_CONFIG.SIMULATOR.HUMAN_COUNTING True` when human-count logging is wanted.*
+
+```bash
+HA_VLN_ROOT="$(git rev-parse --show-toplevel)"
+cd "$HA_VLN_ROOT"
+python -m pip install -r requirements-dino-py38.txt
+conda install -c nvidia/label/cuda-11.8.0 -c conda-forge \
+  cuda-toolkit gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 -y
+export CUDA_HOME="$CONDA_PREFIX"
+export CC="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc"
+export CXX="$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++"
+
+git clone https://github.com/IDEA-Research/GroundingDINO.git HASimulator/GroundingDINO
+git -C HASimulator/GroundingDINO checkout df5b48a3efbaa64288d8d0ad09b748ac86f22671
+MAX_JOBS=2 python -m pip install --no-deps --no-build-isolation \
+  -e HASimulator/GroundingDINO
+
+mkdir -p HASimulator/GroundingDINO/weights
+curl -fL --retry 3 \
+  https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth \
+  -o HASimulator/GroundingDINO/weights/groundingdino_swint_ogc.pth
+python -m pip check
+```
+
+</details>
+
+---
+
 ## 🌆 Human-Scene Fusion
 
 We use nine cameras to annotate any anomalies, such as levitation or model clipping, in humans added to the scene. Check details in [scripts/human_scene_fusion.py](scripts/human_scene_fusion.py).
@@ -325,14 +383,15 @@ We use nine cameras to annotate any anomalies, such as levitation or model clipp
   - **1 overhead camera:** $\theta_{\text{ud}}^{9} = \frac{\pi}{2}$.
 
 To reproduce the [**Multi-view human annotation videos**](https://drive.google.com/drive/folders/1XvGHgLJ0MFDNY_k_iVwE_oGpfBfBaZif?usp=sharing), run the following script:
-```
+```bash
 cd scripts
 python3 human_scene_fusion.py
 ```
 To modify the output data path, change the following line in [scripts/human_scene_fusion.py](scripts/human_scene_fusion.py), or the results will be output in "scripts/test" by default.
-```
+```python
 output_path = "test/"
 ```
+
 ---
 
 ## 🌆 Navigate within a Scene Yourself
@@ -344,30 +403,11 @@ You can navigate through a scene with keyboard:
 | **A** | Turn left    |
 | **D** | Turn right   |
 
-```
+```bash
 cd scripts
 python demo.py --scan 1LXtFkjw3qL
 ```
 You may change the scan id to that of the scene you want to explore.
-
-
----
-
-## 🖥️ Real-time Human Rendering
-
-Human Rendering is defined in the class **HAVLNCE** of [HASimulator/enviorments.py](HASimulator/environments.py).
-
-Human Rendering uses child threads for timing and the main thread for adding / removing human models and recalculating the required navmesh in real time.
-
-In the first use, the navmesh will be automatically calculated and saved to support operations such as collision calculation, and the subsequent use will directly load the previously generated navmesh. To enable human rendering, modify the following settings in [HAVLN-CE task config](HASimulator/config/HAVLNCE_task.yaml):
-
-```
-SIMULATOR:
-  ADD_HUMAN: True
-  HUMAN_GLB_PATH: ../Data/HAPS2_0
-  HUMAN_INFO_PATH: ../Data/Multi-Human-Annotations/human_motion.json
-  RECOMPUTE_NAVMESH_PATH: ../Data/recompute_navmesh
-```
 ---
 
 ## 📊 Training

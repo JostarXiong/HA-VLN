@@ -1,0 +1,57 @@
+{
+  "base_commit": "fabd866daf2fdf23cf5f63fcab8f5b909396eb04",
+  "image": "ghcr.io/jostarxiong/havln-challenge-2026@sha256:78a62cd176d2fd7d0e2825f4cb5be2488ebc5f1a354649b7b4f536a98f1054f4",
+  "installation": {
+    "pip_check": "passed",
+    "habitat_core_preserved": true,
+    "groundingdino_installed": false,
+    "test_network": "host (local bridge unavailable)"
+  },
+  "cma_entrypoint_help": "passed",
+  "checkpoint_tensor_entries": 521,
+  "repository_embeddings_equal_checkpoint": true,
+  "validation_pilots": {
+    "val_seen": {
+      "episodes": 1,
+      "max_steps": 20,
+      "exit_code": 0
+    },
+    "val_unseen": {
+      "episodes": 1,
+      "max_steps": 20,
+      "exit_code": 0
+    }
+  },
+  "full_split_benchmark_reproduced": false,
+  "hf_download": {
+    "real_existing_release_verification_exit_code": 0,
+    "pinned_resources": 9,
+    "haps_files_verified": 116640
+  },
+  "regression_tests": 7,
+  "readme": {
+    "images_preserved": 19,
+    "academic_sections_from_training_preserved": true,
+    "legacy_google_drive_script_unchanged": true,
+    "details_balanced": true,
+    "bash_blocks_syntax_valid": true
+  },
+  "matterport_helper": {
+    "python3_help_passed": true,
+    "habitat_task_filename": "mp3d_habitat.zip",
+    "dispatch": [
+      {
+        "tasks": [
+          "habitat"
+        ],
+        "output": "Data/scene_datasets/v1/tasks/"
+      }
+    ],
+    "validation_network_mocked": true,
+    "licensed_files_downloaded": false,
+    "helper_distributed": false
+  },
+  "optional_detector_enabled_path": "mocked unit test; no full GroundingDINO inference",
+  "native_installation_retested": false,
+  "public_pr_created": false
+}
