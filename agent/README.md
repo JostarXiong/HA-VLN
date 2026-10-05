@@ -67,6 +67,18 @@ flowchart LR
 
 ## 2. Training with DAgger
 
+### Prerequisites: PointGoal Depth Observation Weights
+Baseline models encode depth observations using a ResNet-50 backbone pre-trained on PointGoal navigation (`gibson-2plus-resnet50.pth`). When training from scratch, download and extract the pre-trained weights to `Data/ddppo-models/`:
+
+```bash
+mkdir -p ../Data/ddppo-models
+curl -fL --retry 3 \
+  https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip \
+  -o ../Data/ddppo-models/ddppo-models.zip
+unzip ../Data/ddppo-models/ddppo-models.zip -d ../Data/ddppo-models/
+```
+
+### Start Training
 To train the HA-VLN-CMA policy from scratch using DAgger imitation learning:
 
 ```bash

@@ -259,8 +259,6 @@ pip install gdown
 bash scripts/download_data.sh
 ```
 
-Pretrained PointGoal ResNet depth observation weights can also be downloaded directly from [ddppo-models.zip](https://dl.fbaipublicfiles.com/habitat/data/baselines/v1/ddppo/ddppo-models.zip) and extracted to `Data/ddppo-models/{model}.pth`.
-
 </details>
 
 ---
