@@ -50,14 +50,11 @@
 
 If you find this repository or our paper useful, please consider **starring** this repository and **citing** our paper. You are also welcome to explore our other recent works towards world modeling in navigation, including [**UniWM**](https://github.com/F1y1113/UniWM) and [**GOViG**](https://github.com/F1y1113/GoViG),
 ```bibtex
-@misc{dong2025havln20openbenchmark,
-      title={HA-VLN 2.0: An Open Benchmark and Leaderboard for Human-Aware Navigation in Discrete and Continuous Environments with Dynamic Multi-Human Interactions}, 
-      author={Yifei Dong and Fengyi Wu and Qi He and Zhi-Qi Cheng and Heng Li and Minghan Li and Zebang Cheng and Yuxuan Zhou and Jingdong Sun and Qi Dai and Alexander G Hauptmann},
-      year={2025},
-      eprint={2503.14229},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2503.14229}, 
+@inproceedings{dong2026havln,
+  author    = {Dong, Yifei and Wu, Fengyi and He, Qi and Kong, Lingdong and Li, Heng and Li, Minghan and Cheng, Zebang and Zhou, Yuxuan and Sun, Jingdong and Dai, Qi and Hauptmann, Alexander G. and Cheng, Zhi-Qi},
+  title     = {{HA-VLN 2.0: An Open Benchmark and Leaderboard for Human-Aware Navigation in Discrete and Continuous Environments with Dynamic Multi-Human Interactions}},
+  booktitle = {2026 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year      = {2026},
 }
 ```
 
@@ -143,7 +140,7 @@ docker run --gpus all -it --rm \
 
 The trainer reports component metrics; use the [participant toolkit](https://github.com/F1y1113/havln-challenge) for official action replay and Score.
 
-### 4. Native Installation (Optional)
+### Alternative: Native Installation
 
 <details>
 <summary><b>Native Conda Setup (Python 3.8 / CUDA 11.8 - Recommended)</b></summary>
@@ -530,61 +527,6 @@ These examples illustrate the diversity of **human-aligned navigation instructio
 
 ---
 
-#### HA-R2R Instruction Generation
-
-To generate new instructions for the **HA-R2R dataset**, we employ **ChatGPT-4o** and **LLaMA-3-8B-Instruct** to **contextually enrich and expand scene information** based on the original instructions from the **R2R-CE dataset**.
-
-**Few-Shot Prompting Approach**
-Our approach utilizes a **few-shot template prompt**, consisting of:
-- **A system prompt** 
-- **A set of few-shot examples** 
-
-The **system prompt** primes the LLMs with the **context and requirements** for generating **navigation instructions** in human-populated environments. It outlines the **desired characteristics**, such as:
-- **Relevance** to the navigation task,
-- **Integration of human activities and agent interactions**, and
-- **Precision in describing environmental details**.
-
-The **few-shot examples** serve as **guidelines** for how the instructions should be structured, demonstrating:
-- **Incorporation of human activities**,
-- **Use of relative position information**, and
-- **Integration with original navigation instructions**.
-
-For instance, one **example** includes:
-> *“You will notice someone quietly making a phone call, so please remain quiet as you move.”*
-
----
-
-**Iterative Refinement Process**
-Initially, the models produced **irrelevant or subjective content** and lacked sufficient **detail about human activities**. To improve this:
-1. We **reviewed outputs** and identified discrepancies.
-2. We **refined the system prompt** to emphasize **neutral tone** and **avoid subjective descriptions**.
-3. We **updated few-shot examples** to demonstrate **desired level of detail**.
-4. Through multiple iterations, we ensured that **scene-enriched instructions** remained coherent and relevant to **HA-R2R**.
-
----
-
-#### **LLM Prompt for HA-R2R Instruction Generation**
-**System Prompt**
-```json
-{
-  "system": "You are tasked with generating an objective and detailed description of a path and the related scene information based on the given input. Focus solely on observable entities and actions in the scene, avoiding descriptions of smell, atmosphere, or subjective feelings. Ensure clarity and precision in object and human activity descriptions.",
-  "examples": "... //examples in Listing 4",
-  "user": "Input:\n[instruction_text]: \"...\";\n[start]: \"...\";\n[during]: \"...\";\n[end]: \"...\";\n\nPlease provide an objective, step-by-step description of the path, focusing on the objects and human activities observed at each stage of the navigation (beginning, during, and end). Expand your description by including character actions, objective descriptions of objects, and details of the movement process. Your description should maintain a neutral tone and avoid embellishments. Please simulate the robot's movement along the path, while incorporating possible connections or interactions between the robot, objects, and human activities.\n\nOutput: ... //generation"
-}
-
-{
-  "example_1": {
-    "input": {
-      "instruction_text": "Go through the doorway to the hall. Go down the hall past the landing. Take the first door on the right and stop in the doorway.",
-      "start": "other room: A person using the room for a quiet phone call.",
-      "during": "other room: A person using the room for a quiet phone call.",
-      "end": "hallway: An individual cleaning or vacuuming."
-    },
-    "output": "You should start from the room. Before you walk through the doorway into the hallway, you will notice someone quietly making a phone call, so please remain quiet as you move. Then, proceed down the hallway past the landing. As you continue through the corridor, you will see a responsible cleaner using a vacuum to tidy up. Finally, your destination is at the end of the hallway, enter the first door on the right and stop in the doorway."
-  }
-}
-```
-
 ### 🏃 Human Activities Annotation
 
 #### 🌍 **Stage 1: Coarse Annotation**
@@ -633,14 +575,11 @@ We welcome contributions to this project! Please contact yfeidong@uw.edu , fyiwu
 If you find this repository or our paper useful, please consider **starring** this repository and **citing** our paper:
 
 ```bibtex
-@misc{dong2025havln20openbenchmark,
-      title={HA-VLN 2.0: An Open Benchmark and Leaderboard for Human-Aware Navigation in Discrete and Continuous Environments with Dynamic Multi-Human Interactions}, 
-      author={Yifei Dong and Fengyi Wu and Qi He and Zhi-Qi Cheng and Heng Li and Minghan Li and Zebang Cheng and Yuxuan Zhou and Jingdong Sun and Qi Dai and Alexander G Hauptmann},
-      year={2025},
-      eprint={2503.14229},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2503.14229}, 
+@inproceedings{dong2026havln,
+  author    = {Dong, Yifei and Wu, Fengyi and He, Qi and Kong, Lingdong and Li, Heng and Li, Minghan and Cheng, Zebang and Zhou, Yuxuan and Sun, Jingdong and Dai, Qi and Hauptmann, Alexander G. and Cheng, Zhi-Qi},
+  title     = {{HA-VLN 2.0: An Open Benchmark and Leaderboard for Human-Aware Navigation in Discrete and Continuous Environments with Dynamic Multi-Human Interactions}},
+  booktitle = {2026 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year      = {2026},
 }
 ```
 
