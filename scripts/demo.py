@@ -340,54 +340,52 @@ def main():
         print(f"Error: Failed to create simulator: {e}", file=sys.stderr)
         return 1
 
-    # --- 3. Load Human Data ---
-    try:
-        with open(human_annotations_path, 'r') as f:
-            all_human_data = json.load(f)
-    except FileNotFoundError:
-        print(f"Error: Human annotations file not found at {human_annotations_path}", file=sys.stderr)
-        sim.close()
-        return 1
-    except json.JSONDecodeError as e:
-        print(f"Error: Could not parse human annotations file at {human_annotations_path}: {e}", file=sys.stderr)
-        sim.close()
-        return 1
-    except Exception as e:
-        print(f"Error reading human annotations: {e}", file=sys.stderr)
-        sim.close()
-        return 1
-
-    # Initialize agent position (optional, place it somewhere reasonable)
-    try:
-        initial_state = sim.get_agent(0).get_state()
-        start_pos = sim.pathfinder.get_random_navigable_point()
-        initial_state.position = start_pos
-        sim.get_agent(0).set_state(initial_state)
-        print(f"Agent starting at: {initial_state.position}")
-    except Exception as e:
-        print(f"Warning: Failed to initialize random start position: {e}", file=sys.stderr)
-
-    # --- 4. Initialize Human Manager ---
     human_manager = None
+    created_window = False
     try:
-        human_manager = HumanManager(sim, all_human_data, args.scan, haps_data_path=haps_data_path)
-        human_manager.start_updates()
-    except Exception as e:
-        print(f"Error initializing human manager: {e}", file=sys.stderr)
-        sim.close()
-        return 1
-
-    # --- 5. Display / Verification Handling ---
-    has_display = bool(os.environ.get("DISPLAY")) and not args.headless
-    if has_display:
+        # --- 3. Load Human Data ---
         try:
-            cv2.namedWindow("HA-VLN Interactive", cv2.WINDOW_NORMAL)
+            with open(human_annotations_path, 'r') as f:
+                all_human_data = json.load(f)
+        except FileNotFoundError:
+            print(f"Error: Human annotations file not found at {human_annotations_path}", file=sys.stderr)
+            return 1
+        except json.JSONDecodeError as e:
+            print(f"Error: Could not parse human annotations file at {human_annotations_path}: {e}", file=sys.stderr)
+            return 1
         except Exception as e:
-            print(f"Notice: Could not initialize OpenCV GUI window ({e}). Running in headless verification mode.")
-            has_display = False
+            print(f"Error reading human annotations: {e}", file=sys.stderr)
+            return 1
 
-    if not has_display:
+        # Initialize agent position (optional, place it somewhere reasonable)
         try:
+            initial_state = sim.get_agent(0).get_state()
+            start_pos = sim.pathfinder.get_random_navigable_point()
+            initial_state.position = start_pos
+            sim.get_agent(0).set_state(initial_state)
+            print(f"Agent starting at: {initial_state.position}")
+        except Exception as e:
+            print(f"Warning: Failed to initialize random start position: {e}", file=sys.stderr)
+
+        # --- 4. Initialize Human Manager ---
+        try:
+            human_manager = HumanManager(sim, all_human_data, args.scan, haps_data_path=haps_data_path)
+            human_manager.start_updates()
+        except Exception as e:
+            print(f"Error initializing human manager: {e}", file=sys.stderr)
+            return 1
+
+        # --- 5. Display / Verification Handling ---
+        has_display = bool(os.environ.get("DISPLAY")) and not args.headless
+        if has_display:
+            try:
+                cv2.namedWindow("HA-VLN Interactive", cv2.WINDOW_NORMAL)
+                created_window = True
+            except Exception as e:
+                print(f"Notice: Could not initialize OpenCV GUI window ({e}). Running in headless verification mode.")
+                has_display = False
+
+        if not has_display:
             print("\n--- Headless Verification Mode ---")
             print("Stepping simulator physics and dynamic human animations...")
             human_manager.update_humans()
@@ -409,26 +407,15 @@ def main():
             print(f"Verification frame successfully rendered and saved to: {args.output_frame}")
             print("Headless verification completed successfully.")
             return 0
-        finally:
-            print("Cleaning up simulator and background worker threads...")
-            try:
-                if human_manager:
-                    try:
-                        human_manager.stop_updates()
-                    finally:
-                        human_manager.cleanup_humans()
-            finally:
-                sim.close()
 
-    # --- 6. Interactive Keyboard Control Loop ---
-    print("\n--- Interactive Controls ---")
-    print("  W: Move Forward")
-    print("  A: Turn Left")
-    print("  D: Turn Right")
-    print("  Q: Quit")
-    print("---------------------------\n")
+        # --- 6. Interactive Keyboard Control Loop ---
+        print("\n--- Interactive Controls ---")
+        print("  W: Move Forward")
+        print("  A: Turn Left")
+        print("  D: Turn Right")
+        print("  Q: Quit")
+        print("---------------------------\n")
 
-    try:
         while True:
             human_manager.update_humans()
             sim.step_physics(1.0 / 60.0)
@@ -458,21 +445,29 @@ def main():
         return 0
 
     except KeyboardInterrupt:
-        print("Interrupted by user.")
+        print("Interrupted by user.", file=sys.stderr)
         return 130
     finally:
         print("Shutting down...")
         try:
-            if human_manager:
+            if human_manager is not None:
                 try:
                     human_manager.stop_updates()
-                finally:
+                except Exception:
+                    pass
+                try:
                     human_manager.cleanup_humans()
+                except Exception:
+                    pass
         finally:
             try:
                 sim.close()
             finally:
-                cv2.destroyAllWindows()
+                if created_window:
+                    try:
+                        cv2.destroyAllWindows()
+                    except Exception:
+                        pass
                 print("Simulator closed.")
 
 if __name__ == "__main__":
