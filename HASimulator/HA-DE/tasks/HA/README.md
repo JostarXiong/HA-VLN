@@ -63,7 +63,7 @@ python3 tasks/HA/eval.py
 ```
 
 Generate figures from the paper:
-```bash
+```
 python3 tasks/HA/plot.py
 ```
 
@@ -72,4 +72,4 @@ The simple baselines include:
 - `RandomAgent`: Agent that randomly picks a directly, then tries to go straight for 5 viewpoints.
 - `StopAgent`: Agent that remains at the starting position.
 
-*(Running `tasks/HA/plot.py` evaluates the baselines and generates benchmark error curves saved to `plots/error.png`.)*
+![Navigation Error](plots/error.png)
