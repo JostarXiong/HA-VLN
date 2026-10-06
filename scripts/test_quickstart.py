@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace, ModuleType
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, mock_open
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -112,6 +112,99 @@ class DetectorTests(unittest.TestCase):
         fake.Detector = Detector
         with patch.dict('sys.modules', {'HASimulator.detector': fake}):
             self.assertEqual(self.trainer(True).detector.device, 'cpu')
+
+
+class DemoCleanupTests(unittest.TestCase):
+    def _setup_env(self, temp):
+        data_dir = Path(temp)
+        scene_file = data_dir / 'scene_datasets/mp3d/1LXtFkjw3qL/1LXtFkjw3qL.glb'
+        scene_file.parent.mkdir(parents=True)
+        scene_file.write_bytes(b'glb')
+        ann_file = data_dir / 'Multi-Human-Annotations/human_motion.json'
+        ann_file.parent.mkdir(parents=True)
+        ann_file.write_text('[]')
+        return data_dir
+
+    def _load_demo_mod(self, mock_sim):
+        def fake_imwrite(path, img):
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            Path(path).write_bytes(b'fake_png')
+            return True
+
+        with patch.dict('sys.modules', {
+            'habitat_sim': MagicMock(Simulator=MagicMock(return_value=mock_sim)),
+            'magnum': MagicMock(),
+            'cv2': MagicMock(imwrite=fake_imwrite),
+            'numpy': MagicMock(),
+        }):
+            spec_demo = importlib.util.spec_from_file_location('demo_cleanup_test_mod', ROOT / 'scripts/demo.py')
+            demo_mod = importlib.util.module_from_spec(spec_demo)
+            spec_demo.loader.exec_module(demo_mod)
+            return demo_mod
+
+    def test_simulator_closed_on_keyboard_interrupt_during_annotation_load(self):
+        with tempfile.TemporaryDirectory() as temp:
+            data_dir = self._setup_env(temp)
+            mock_sim = MagicMock()
+            demo_mod = self._load_demo_mod(mock_sim)
+
+            out_frame = str(data_dir / 'test/out.png')
+            with patch('builtins.open', side_effect=KeyboardInterrupt()):
+                with patch('sys.argv', ['demo.py', '--data-dir', str(data_dir), '--output-frame', out_frame, '--headless']):
+                    ret = demo_mod.main()
+                    self.assertEqual(ret, 130)
+                    mock_sim.close.assert_called_once()
+
+    def test_simulator_closed_and_manager_cleaned_on_interrupt_during_start_updates(self):
+        with tempfile.TemporaryDirectory() as temp:
+            data_dir = self._setup_env(temp)
+            mock_sim = MagicMock()
+            mock_human_mgr = MagicMock()
+            mock_human_mgr.start_updates.side_effect = KeyboardInterrupt()
+            demo_mod = self._load_demo_mod(mock_sim)
+
+            with patch.object(demo_mod, 'HumanManager', return_value=mock_human_mgr):
+                out_frame = str(data_dir / 'test/out.png')
+                with patch('sys.argv', ['demo.py', '--data-dir', str(data_dir), '--output-frame', out_frame, '--headless']):
+                    ret = demo_mod.main()
+                    self.assertEqual(ret, 130)
+                    mock_sim.close.assert_called_once()
+                    mock_human_mgr.stop_updates.assert_called_once()
+                    mock_human_mgr.cleanup_humans.assert_called_once()
+
+    def test_manager_cleaned_and_simulator_closed_on_exception_during_start_updates(self):
+        with tempfile.TemporaryDirectory() as temp:
+            data_dir = self._setup_env(temp)
+            mock_sim = MagicMock()
+            mock_human_mgr = MagicMock()
+            mock_human_mgr.start_updates.side_effect = RuntimeError('start_updates thread creation error')
+            demo_mod = self._load_demo_mod(mock_sim)
+
+            with patch.object(demo_mod, 'HumanManager', return_value=mock_human_mgr):
+                out_frame = str(data_dir / 'test/out.png')
+                with patch('sys.argv', ['demo.py', '--data-dir', str(data_dir), '--output-frame', out_frame, '--headless']):
+                    ret = demo_mod.main()
+                    self.assertEqual(ret, 1)
+                    mock_sim.close.assert_called_once()
+                    mock_human_mgr.stop_updates.assert_called_once()
+                    mock_human_mgr.cleanup_humans.assert_called_once()
+
+    def test_simulator_closed_even_if_cleanup_raises(self):
+        with tempfile.TemporaryDirectory() as temp:
+            data_dir = self._setup_env(temp)
+            mock_sim = MagicMock()
+            mock_sim.get_sensor_observations.return_value = {'color_sensor': MagicMock()}
+            mock_human_mgr = MagicMock()
+            mock_human_mgr.stop_updates.side_effect = RuntimeError('stop_updates failure injection')
+            mock_human_mgr.cleanup_humans.side_effect = RuntimeError('cleanup_humans failure injection')
+            demo_mod = self._load_demo_mod(mock_sim)
+
+            with patch.object(demo_mod, 'HumanManager', return_value=mock_human_mgr):
+                out_frame = str(data_dir / 'test/out.png')
+                with patch('sys.argv', ['demo.py', '--data-dir', str(data_dir), '--output-frame', out_frame, '--headless']):
+                    ret = demo_mod.main()
+                    self.assertEqual(ret, 0)
+                    mock_sim.close.assert_called_once()
 
 
 if __name__ == '__main__':
