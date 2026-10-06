@@ -453,21 +453,23 @@ def main():
             if human_manager is not None:
                 try:
                     human_manager.stop_updates()
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Warning: Exception stopping human manager updates: {e}", file=sys.stderr)
                 try:
                     human_manager.cleanup_humans()
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Warning: Exception cleaning up human objects: {e}", file=sys.stderr)
         finally:
             try:
                 sim.close()
+            except Exception as e:
+                print(f"Warning: Exception closing simulator: {e}", file=sys.stderr)
             finally:
                 if created_window:
                     try:
                         cv2.destroyAllWindows()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        print(f"Warning: Exception destroying OpenCV windows: {e}", file=sys.stderr)
                 print("Simulator closed.")
 
 if __name__ == "__main__":
