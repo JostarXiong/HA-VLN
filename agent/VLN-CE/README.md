@@ -5,7 +5,7 @@
 Official implementations:
 
 - *Beyond the Nav-Graph: Vision-and-Language Navigation in Continuous Environments* ([paper](https://arxiv.org/abs/2004.02857))
-- *Waypoint Models for Instruction-guided Navigation in Continuous Environments* ([paper](https://arxiv.org/abs/2110.02207), [README](/vlnce_baselines/config/r2r_waypoint/README.md))
+- *Waypoint Models for Instruction-guided Navigation in Continuous Environments* ([paper](https://arxiv.org/abs/2110.02207), [README](vlnce_baselines/config/r2r_waypoint/README.md))
 
 Vision and Language Navigation in Continuous Environments (VLN-CE) is an instruction-guided navigation task with crowdsourced instructions, realistic environments, and unconstrained agent navigation. This repo is a launching point for interacting with the VLN-CE task and provides both baseline agents and training methods. Both the Room-to-Room (**R2R**) and the Room-Across-Room (**RxR**) datasets are supported. VLN-CE is implemented using the Habitat platform.
 
@@ -159,9 +159,9 @@ If you use different models for different languages, you can merge their predict
 
 #### Required Task Configurations
 
-As specified in the [challenge webpage](https://ai.google.com/research/rxr/habitat), submissions to the official challenge must have an action space of 30 degree turn angles, a 0.25m step size, and look up / look down actions of 30 degrees. The agent is given a 480x640 RGBD observation space. An example task configuration is given [here](/habitat_extensions/config/rxr_vlnce_english_task.yaml) which loads the English portion of the dataset.
+As specified in the [challenge webpage](https://ai.google.com/research/rxr/habitat), submissions to the official challenge must have an action space of 30 degree turn angles, a 0.25m step size, and look up / look down actions of 30 degrees. The agent is given a 480x640 RGBD observation space. An example task configuration is given [here](habitat_extensions/config/rxr_vlnce_english_task.yaml) which loads the English portion of the dataset.
 
-The CMA baseline model ([config](/vlnce_baselines/config/rxr_baselines/rxr_cma_en.yaml)) is an example of a valid submission. Existing [waypoint models](/vlnce_baselines/config/r2r_waypoint) are not valid due to their panoramic observation space. Such models would need to be adapted to the challenge configuration.
+The CMA baseline model ([config](vlnce_baselines/config/rxr_baselines/rxr_cma_en.yaml)) is an example of a valid submission. Existing [waypoint models](vlnce_baselines/config/r2r_waypoint/README.md) are not valid due to their panoramic observation space. Such models would need to be adapted to the challenge configuration.
 
 ### Baseline Model
 
@@ -264,7 +264,7 @@ The simulator and torch code do not need to run on the same device. For faster t
 
 ## License
 
-The VLN-CE codebase is [MIT licensed](LICENSE). Trained models and task datasets are considered data derived from the mp3d scene dataset. Matterport3D based task datasets and trained models are distributed with [Matterport3D Terms of Use](http://kaldir.vc.in.tum.de/matterport/MP_TOS.pdf) and under [CC BY-NC-SA 3.0 US license](https://creativecommons.org/licenses/by-nc-sa/3.0/us/).
+The VLN-CE codebase is [MIT licensed](../../LICENSE). Trained models and task datasets are considered data derived from the mp3d scene dataset. Matterport3D based task datasets and trained models are distributed with [Matterport3D Terms of Use](http://kaldir.vc.in.tum.de/matterport/MP_TOS.pdf) and under [CC BY-NC-SA 3.0 US license](https://creativecommons.org/licenses/by-nc-sa/3.0/us/).
 
 ## Citing
 

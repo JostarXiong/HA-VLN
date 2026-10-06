@@ -399,7 +399,7 @@ SIMULATOR:
 > 
 > If you wish to enable human counting:
 > 1. Set `HUMAN_COUNTING: True` in [HASimulator/config/HAVLNCE_task.yaml](HASimulator/config/HAVLNCE_task.yaml) (or pass `TASK_CONFIG.SIMULATOR.HUMAN_COUNTING True` via CLI options).
-> 2. Install GroundingDINO and download its weights by following the setup instructions in [Native Installation](#4-native-installation-optional) (for Docker, use only the **Python 3.8 optional GroundingDINO block**).
+> 2. Install GroundingDINO and download its weights by following the setup instructions in [Native Installation](#alternative-native-installation) (for Docker, use only the **Python 3.8 optional GroundingDINO block**).
 
 ---
 

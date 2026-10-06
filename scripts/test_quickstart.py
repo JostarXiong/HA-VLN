@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace, ModuleType
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, mock_open
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -112,6 +112,40 @@ class DetectorTests(unittest.TestCase):
         fake.Detector = Detector
         with patch.dict('sys.modules', {'HASimulator.detector': fake}):
             self.assertEqual(self.trainer(True).detector.device, 'cpu')
+
+
+class DemoCleanupTests(unittest.TestCase):
+    def test_simulator_closed_even_if_cleanup_raises(self):
+        with tempfile.TemporaryDirectory() as temp:
+            data_dir = Path(temp)
+            scene_file = data_dir / 'scene_datasets/mp3d/1LXtFkjw3qL/1LXtFkjw3qL.glb'
+            scene_file.parent.mkdir(parents=True)
+            scene_file.write_bytes(b'glb')
+            ann_file = data_dir / 'Multi-Human-Annotations/human_motion.json'
+            ann_file.parent.mkdir(parents=True)
+            ann_file.write_text('[]')
+
+            mock_sim = MagicMock()
+            mock_sim.get_sensor_observations.return_value = {'color_sensor': MagicMock()}
+            mock_human_mgr = MagicMock()
+            mock_human_mgr.stop_updates.side_effect = RuntimeError('stop_updates failure injection')
+            mock_human_mgr.cleanup_humans.side_effect = RuntimeError('cleanup_humans failure injection')
+
+            with patch.dict('sys.modules', {
+                'habitat_sim': MagicMock(Simulator=MagicMock(return_value=mock_sim)),
+                'magnum': MagicMock(),
+                'cv2': MagicMock(imwrite=MagicMock(return_value=True)),
+                'numpy': MagicMock(),
+            }):
+                spec_demo = importlib.util.spec_from_file_location('demo_cleanup_test_mod', ROOT / 'scripts/demo.py')
+                demo_mod = importlib.util.module_from_spec(spec_demo)
+                spec_demo.loader.exec_module(demo_mod)
+                with patch.object(demo_mod, 'HumanManager', return_value=mock_human_mgr):
+                    out_frame = str(data_dir / 'test/out.png')
+                    with patch('sys.argv', ['demo.py', '--data-dir', str(data_dir), '--output-frame', out_frame, '--headless']):
+                        with self.assertRaises(RuntimeError):
+                            demo_mod.main()
+                        mock_sim.close.assert_called_once()
 
 
 if __name__ == '__main__':

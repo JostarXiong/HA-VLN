@@ -1,13 +1,13 @@
 ## 📈 Visualization
 
-**We present several annotated instances of human subjects from the proposed HAPS 2.0 Dataset (Overall and single), showcasing a variety of well-aligned motions, movements, and interations.** 
+**We present several annotated instances of human subjects from the proposed HAPS 2.0 Dataset (Overall and single), showcasing a variety of well-aligned motions, movements, and interactions.** 
 
 <div align="center">
   <img src="gifs/havln.gif" alt="image2" width="700"/>
 </div>
 
 
-**Overall View of Nine Annoated Scenarios from HA-VLN Simulator (90 scans in total)** 
+**Overall View of Nine Annotated Scenarios from HA-VLN Simulator (90 scans in total)** 
 
 <div align="center">
   <img src="figs/overview_example-1.png" alt="image2" width="700"/>

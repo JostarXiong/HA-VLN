@@ -11,11 +11,11 @@ HA3D Simulator integrates 3D human models into real-world environments. Built up
   - [🐍 Create Conda Environment](#-create-conda-environment)
   - [📥 Download Dataset](#-download-dataset)
   - [🔄 Dataset Preprocessing](#-dataset-preprocessing)
-  - [🏗️ Build Matterport3D Simulator](#️-build-matterport3d-simulator)
+  - [🏗️ Build Matterport3D Simulator](#-build-matterport3d-simulator)
   - [🚀 Run HA3D Simulator](#-run-ha3d-simulator)
   - [🕺 Human Motion Generation](#-human-motion-generation)
-  - [🌆 Human-Scene Fusion](#-human-scene-fusion)
-  - [🖥️ Offscreen Rendering](#️-offscreen-rendering)
+  - [🌆 Annotation](#-annotation)
+  - [🖥️ Offscreen Rendering](#-offscreen-rendering)
   - [📊 Training](#-training)
 
 ## 🔧 Setup Environment
@@ -48,7 +48,7 @@ pip install -r requirements.txt
 To use the simulator, download the [Matterport3D Dataset](https://niessner.github.io/Matterport/) (access required).
 
 ```bash
-python2 download_mp.py -o $HA3D_SIMULATOR_DATA_PATH/dataset --type matterport_skybox_images undistorted_camera_parameters undistorted_depth_images
+python3 download_mp.py -o $HA3D_SIMULATOR_DATA_PATH/dataset --type matterport_skybox_images undistorted_camera_parameters undistorted_depth_images
 python scripts/unzip_data.py
 ```
 
