@@ -14,7 +14,7 @@ HA3D Simulator integrates 3D human models into real-world environments. Built up
   - [🏗️ Build Matterport3D Simulator](#-build-matterport3d-simulator)
   - [🚀 Run HA3D Simulator](#-run-ha3d-simulator)
   - [🕺 Human Motion Generation](#-human-motion-generation)
-  - [🌆 Annotation](#-annotation)
+  - [🌆 Human-Scene Fusion](#-human-scene-fusion)
   - [🖥️ Offscreen Rendering](#-offscreen-rendering)
   - [📊 Training](#-training)
 
