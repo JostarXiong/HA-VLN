@@ -35,7 +35,7 @@
   <a href="https://f1y1113.github.io/havln-challenge/" target="_blank">
     <img src="https://img.shields.io/badge/Challenge-RoboWorld2026-orange">
   </a>
-  <a href="https://github.com/UWMILab/HA-VLN/blob/main/LICENSE" target="_blank">
+  <a href="https://github.com/JostarXiong/havln2/blob/main/LICENSE" target="_blank">
     <img src="https://img.shields.io/badge/License-MIT-green">
   </a>
 </p>
@@ -94,8 +94,8 @@ In this section, you will download the necessary datasets, set up the Docker env
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/UWMILab/HA-VLN.git
-cd HA-VLN
+git clone https://github.com/JostarXiong/havln2.git
+cd havln2
 ```
 
 ### 2. Download Datasets & Checkpoint
@@ -131,10 +131,10 @@ DATA_DIR="$(cd Data && pwd -P)"
 
 docker run --gpus all -it --rm \
   --shm-size 16g \
-  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
-  --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
+  --mount type=bind,source="$(pwd)",target=/workspace/havln2 \
+  --mount type=bind,source="$DATA_DIR",target=/workspace/havln2/Data \
   --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
-  --workdir /workspace/HA-VLN \
+  --workdir /workspace/havln2 \
   "$IMAGE" bash -lc 'bash scripts/setup_docker_cma.sh && cd agent &&
     python run.py --exp-config config/cma_pm_da_aug_tune.yaml --run-type eval \
       MODEL.DEPTH_ENCODER.ddppo_checkpoint NONE VIDEO_OPTION "[]"'
@@ -167,20 +167,20 @@ Experience the human-populated simulator yourself by navigating interactively us
 # 1. Headless verification (validates rendering and dynamic humans; outputs test frame to scripts/test/demo_frame.png)
 docker run --gpus all -it --rm \
   --shm-size 16g \
-  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
-  --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
+  --mount type=bind,source="$(pwd)",target=/workspace/havln2 \
+  --mount type=bind,source="$DATA_DIR",target=/workspace/havln2/Data \
   --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
-  --workdir /workspace/HA-VLN/scripts \
+  --workdir /workspace/havln2/scripts \
   "$IMAGE" python demo.py --scan 1LXtFkjw3qL --headless
 
 # 2. Interactive GUI window (requires an active host X11 display forwarded into Docker)
 docker run --gpus all -it --rm \
   --shm-size 16g \
   -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
-  --mount type=bind,source="$(pwd)",target=/workspace/HA-VLN \
-  --mount type=bind,source="$DATA_DIR",target=/workspace/HA-VLN/Data \
+  --mount type=bind,source="$(pwd)",target=/workspace/havln2 \
+  --mount type=bind,source="$DATA_DIR",target=/workspace/havln2/Data \
   --mount type=bind,source="$DATA_DIR",target=/data/havln2 \
-  --workdir /workspace/HA-VLN/scripts \
+  --workdir /workspace/havln2/scripts \
   "$IMAGE" python demo.py --scan 1LXtFkjw3qL
 ```
 
